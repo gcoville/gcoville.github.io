@@ -1,0 +1,122 @@
+--- min_mon.asm.asl	2012-01-29 14:29:39.000000000 -0800
++++ min_mon.asm	2012-01-29 19:54:43.000000000 -0800
+@@ -1,3 +1,4 @@
++	page	0
+ 
+ ; minimal monitor for EhBASIC and 6502 simulator V1.05
+ 
+@@ -5,6 +6,7 @@
+ ; running [F6] then start the code with the RESET [CTRL][SHIFT]R. Just selecting RUN
+ ; will do nothing, you'll still have to do a reset to run the code.
+ 
++	include	"bitfuncs.inc"		; required so that hi() and lo() work
+ 	include "basic.asm"
+ 
+ ; put the IRQ and MNI code in RAM so that it can be changed
+@@ -12,18 +14,14 @@
+ IRQ_vec	= VEC_SV+2		; IRQ code vector
+ NMI_vec	= IRQ_vec+$0A	; NMI code vector
+ 
+-; setup for the 6502 simulator environment
+-
+-IO_AREA	= $F000		; set I/O area for this monitor
+-
+-ACIAsimwr	= IO_AREA+$01	; simulated ACIA write port
+-ACIAsimrd	= IO_AREA+$04	; simulated ACIA read port
++sercsr	equ	$c000
++serdata	equ	$c001
+ 
+ ; now the code. all this does is set up the vectors and interrupt code
+ ; and wait for the user to select [C]old or [W]arm start. nothing else
+ ; fits in less than 128 bytes
+ 
+-	org	$FF80			; pretend this is in a 1/8K ROM
++	org	$b000
+ 
+ ; reset vector points here
+ 
+@@ -41,6 +39,12 @@
+ 	DEY				; decrement index/count
+ 	BNE	LAB_stlp		; loop if more to do
+ 
++serinit:
++	lda	#3		; code to reset ACIA
++	sta	sercsr
++	lda	#$15		; interrupts off, 8N1, div by 16
++	sta	sercsr
++
+ ; now do the signon message, Y = $00 here
+ 
+ LAB_signon
+@@ -67,23 +71,31 @@
+ LAB_dowarm
+ 	JMP	LAB_WARM		; do EhBASIC warm start
+ 
+-; byte out to simulated ACIA
+-
+-ACIAout
+-	STA	ACIAsimwr		; save byte to simulated ACIA
+-	RTS
+-
+-; byte in from simulated ACIA
+-
+-ACIAin
+-	LDA	ACIAsimrd		; get byte from simulated ACIA
+-	BEQ	LAB_nobyw		; branch if no byte waiting
++output
++	pha				; save byte to be output
++outlp
++	lda	sercsr
++	and	#2			; check for transmit data reg empty
++	beq	outlp
++	pla
++	sta	serdata
++	cmp	#0			; N and Z flags should reflect char in A
++	rts
++
++input
++	lda	sercsr			; check for byte received
++	and	#1
++	beq	no_input
++
++	lda	serdata
++
++	sec				; set carry
++	rts
++
++no_input
++	clc				; clear carry (A already zero)
++	rts
+ 
+-	SEC				; flag byte received
+-	RTS
+-
+-LAB_nobyw
+-	CLC				; flag no byte received
+ no_load				; empty load vector for EhBASIC
+ no_save				; empty save vector for EhBASIC
+ 	RTS
+@@ -91,8 +103,8 @@
+ ; vector tables
+ 
+ LAB_vec
+-	fdb	ACIAin		; byte in from simulated ACIA
+-	fdb	ACIAout		; byte out to simulated ACIA
++	fdb	input		; input byte from serial port (non-blocking)
++	fdb	output		; output byte to serial port
+ 	fdb	no_load		; null load vector for EhBASIC
+ 	fdb	no_save		; null save vector for EhBASIC
+ 
+@@ -123,12 +135,3 @@
+ LAB_mess
+ 	fcb	$0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
+ 					; sign on string
+-
+-; system vectors
+-
+-	org	$FFFA
+-
+-	fdb	NMI_vec		; NMI vector
+-	fdb	RES_vec		; RESET vector
+-	fdb	IRQ_vec		; IRQ vector
+-

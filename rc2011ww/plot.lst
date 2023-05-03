@@ -1,0 +1,1909 @@
+ AS V1.41r8 - source file plot.asm - page 1 - 1/31/2011 20:02:23
+
+
+       1/       0 :                     	PAGE	0
+       2/       0 :                     
+       3/       0 : =$2000              sercsr	equ	$2000
+       4/       0 : =$2001              serdata	equ	$2001
+       5/       0 : =$2400              lcdctl	equ	$2400
+       6/       0 : =$2401              lcddata	equ	$2401
+       7/       0 :                     
+       8/       0 : =$fcbc              redis	equ	$fcbc
+       9/       0 : =$fe20              outbyt	equ	$fe20
+      10/       0 :                     
+      11/    2800 :                     	org	$2800
+      12/    2800 :                     
+      13/    2800 :                     main:
+      14/    2800 : bd 28 34            	jsr	lcd_init
+      15/    2803 : bd 29 09            	jsr	ser_init
+      16/    2806 : bd 28 67            	jsr	plotter_init
+      17/    2809 :                     
+      18/    2809 : ce 2a 48            	ldx	#paleoferrosaurus_plot
+      19/    280c : bd 28 99            	jsr	plotter_doplot
+      20/    280f :                     
+      21/    280f : ce 29 bf            	ldx	#message
+      22/    2812 : bd 29 21            	jsr	ser_putstring
+      23/    2815 :                     
+      24/    2815 : bd 28 8f            	jsr	plotter_putpenaway
+      25/    2818 :                     
+      26/    2818 :                     mainloop:
+      27/    2818 : bd 29 16            	jsr	ser_getchar
+      28/    281b : bd fc bc            	jsr	redis
+      29/    281e : bd fe 20            	jsr	outbyt
+      30/    2821 : 81 08               	cmpa	#$08
+      31/    2823 : 27 08               	beq	backspace
+      32/    2825 : bd 28 41            	jsr	lcd_putchar
+      33/    2828 : bd 29 2d            	jsr	ser_putchar
+      34/    282b : 20 eb               	bra	mainloop
+      35/    282d :                     backspace:
+      36/    282d : 86 10               	ldaa	#$10
+      37/    282f : bd 28 5a            	jsr	lcdsendctl
+      38/    2832 : 20 e4               	bra	mainloop
+      39/    2834 :                     
+      40/    2834 :                     ; LCD routines
+      41/    2834 :                     
+      42/    2834 :                     lcd_init:
+      43/    2834 : 86 38               	ldaa	#$38		; 8bit interface, 2-line display, 5x7 chars
+      44/    2836 : 8d 22               	bsr	lcdsendctl
+      45/    2838 : 86 01               	ldaa	#$1		; clear display
+      46/    283a : 8d 1e               	bsr	lcdsendctl
+      47/    283c : 86 0e               	ldaa	#$0e		; display on, cursor on, blink off
+      48/    283e : 8d 1a               	bsr	lcdsendctl
+      49/    2840 : 39                  	rts
+      50/    2841 :                     
+      51/    2841 :                     lcd_putchar:
+      52/    2841 : 36                  	psha
+      53/    2842 :                     senddlp:
+      54/    2842 : b6 24 00            	ldaa	lcdctl
+      55/    2845 : 84 80               	anda	#$80
+      56/    2847 : 26 f9               	bne	senddlp
+      57/    2849 : 32                  	pula
+      58/    284a : b7 24 01            	staa	lcddata
+      59/    284d : 39                  	rts
+      60/    284e :                     
+      61/    284e :                     lcd_string:
+      62/    284e : 36                  	psha
+      63/    284f :                     display_lp:
+      64/    284f : a6 00               	ldaa	0,x
+      65/    2851 : 27 05               	beq	display_done
+      66/    2853 : 8d ec               	bsr	lcd_putchar
+      67/    2855 : 08                  	inx
+      68/    2856 : 20 f7               	bra	display_lp
+      69/    2858 :                     display_done:
+      70/    2858 : 32                  	pula
+      71/    2859 : 39                  	rts
+      72/    285a :                     
+      73/    285a :                     lcdsendctl:
+      74/    285a : 36                  	psha
+      75/    285b :                     sendclp:
+      76/    285b : b6 24 00            	ldaa	lcdctl
+      77/    285e : 84 80               	anda	#$80
+      78/    2860 : 26 f9               	bne	sendclp
+      79/    2862 : 32                  	pula
+      80/    2863 : b7 24 00            	staa	lcdctl
+      81/    2866 : 39                  	rts
+      82/    2867 :                     
+      83/    2867 :                     ; Plotter routines
+      84/    2867 :                     
+      85/    2867 :                     plotter_init:
+      86/    2867 : ce 29 80            	ldx	#plotter_init_string
+      87/    286a : bd 29 21            	jsr	ser_putstring
+      88/    286d : 7f 29 bc            	clr	plotter_penstate
+      89/    2870 : 39                  	rts
+      90/    2871 :                     
+      91/    2871 :                     plotter_plot_absolute:
+      92/    2871 : ce 29 b1            	ldx	#plotter_plot_absolute_string
+      93/    2874 : bd 29 21            	jsr	ser_putstring
+      94/    2877 : 39                  	rts
+      95/    2878 :                     
+      96/    2878 :                     plotter_penup:
+      97/    2878 : ce 29 b4            	ldx	#plotter_penup_string
+      98/    287b : bd 29 21            	jsr	ser_putstring
+      99/    287e : 7f 29 bc            	clr	plotter_penstate
+     100/    2881 : 39                  	rts
+     101/    2882 :                     
+     102/    2882 :                     plotter_pendown:
+     103/    2882 : ce 29 b8            	ldx	#plotter_pendown_string
+     104/    2885 : bd 29 21            	jsr	ser_putstring
+     105/    2888 : 7f 29 bc            	clr	plotter_penstate
+     106/    288b : 7c 29 bc            	inc	plotter_penstate
+     107/    288e : 39                  	rts
+     108/    288f :                     
+     109/    288f :                     plotter_putpenaway:
+     110/    288f : ce 29 ac            	ldx	#plotter_penaway_string
+     111/    2892 : bd 29 21            	jsr	ser_putstring
+     112/    2895 : 7f 29 bc            	clr	plotter_penstate
+     113/    2898 : 39                  	rts
+     114/    2899 :                     
+     115/    2899 :                     plotter_doplot:
+     116/    2899 : ff 29 bd            	stx	plotter_savex
+     117/    289c : 8d da               	bsr	plotter_penup
+     118/    289e : fe 29 bd            	ldx	plotter_savex
+     119/    28a1 :                     
+     120/    28a1 :                     plotter_doplot_lp:
+     121/    28a1 : a6 00               	ldaa	0,x		; get next x coord
+     122/    28a3 : 27 2b               	beq	plotter_special	; check for special case
+     123/    28a5 : 08                  	inx
+     124/    28a6 :                     
+     125/    28a6 : ff 29 bd            	stx	plotter_savex
+     126/    28a9 : 8d c6               	bsr	plotter_plot_absolute
+     127/    28ab : fe 29 bd            	ldx	plotter_savex
+     128/    28ae :                     
+     129/    28ae : bd 28 e1            	jsr	printa
+     130/    28b1 : 86 2c               	ldaa	#','
+     131/    28b3 : bd 29 2d            	jsr	ser_putchar
+     132/    28b6 : a6 00               	ldaa	0,x		; get next y coord
+     133/    28b8 : 08                  	inx
+     134/    28b9 : bd 28 e1            	jsr	printa
+     135/    28bc : 86 3b               	ldaa	#';'
+     136/    28be : bd 29 2d            	jsr	ser_putchar
+     137/    28c1 :                     
+     138/    28c1 : b6 29 bc            	ldaa	plotter_penstate
+     139/    28c4 : 26 db               	bne	plotter_doplot_lp
+     140/    28c6 :                     
+     141/    28c6 : ff 29 bd            	stx	plotter_savex
+     142/    28c9 : 8d b7               	bsr	plotter_pendown
+     143/    28cb : fe 29 bd            	ldx	plotter_savex
+     144/    28ce :                     
+     145/    28ce : 20 d1               	bra	plotter_doplot_lp
+     146/    28d0 :                     
+     147/    28d0 :                     plotter_special:
+     148/    28d0 : e6 01               	ldab	1,x
+     149/    28d2 : 27 0c               	beq	plotter_doplot_done
+     150/    28d4 : 08                  	inx
+     151/    28d5 : 08                  	inx
+     152/    28d6 : ff 29 bd            	stx	plotter_savex
+     153/    28d9 : 8d 9d               	bsr	plotter_penup
+     154/    28db : fe 29 bd            	ldx	plotter_savex
+     155/    28de :                     
+     156/    28de : 20 c1               	bra	plotter_doplot_lp
+     157/    28e0 :                     
+     158/    28e0 :                     plotter_doplot_done:
+     159/    28e0 : 39                  	rts
+     160/    28e1 :                     	
+     161/    28e1 :                     printa:				; quick-n-dirty routine to print A as decimal ascii
+     162/    28e1 : 37                  	pshb
+     163/    28e2 : 16                  	tab
+     164/    28e3 : 4f                  	clra
+     165/    28e4 :                     
+     166/    28e4 :                     printa_0:
+     167/    28e4 : c1 64               	cmpb	#100
+     168/    28e6 : 25 05               	blo	printa_1
+     169/    28e8 : c0 64               	subb	#100
+     170/    28ea : 4c                  	inca
+     171/    28eb : 20 f7               	bra	printa_0
+     172/    28ed :                     printa_1:
+     173/    28ed : 8b 30               	adda	#'0'
+     174/    28ef : bd 29 2d            	jsr	ser_putchar
+     175/    28f2 : 4f                  	clra
+     176/    28f3 :                     printa_2:
+     177/    28f3 : c1 0a               	cmpb	#10
+     178/    28f5 : 25 05               	blo	printa_3
+     179/    28f7 : c0 0a               	subb	#10
+     180/    28f9 : 4c                  	inca
+     181/    28fa : 20 f7               	bra	printa_2
+     182/    28fc :                     printa_3:
+     183/    28fc : 8b 30               	adda	#'0'
+     184/    28fe : bd 29 2d            	jsr	ser_putchar
+     185/    2901 : 17                  	tba
+     186/    2902 : 8b 30               	adda	#'0'
+     187/    2904 : bd 29 2d            	jsr	ser_putchar
+     188/    2907 :                     	
+     189/    2907 : 33                  	pulb
+     190/    2908 : 39                  	rts
+     191/    2909 :                     	
+     192/    2909 :                     ; Serial port routines
+     193/    2909 :                     
+     194/    2909 :                     ser_init:
+     195/    2909 : 36                  	psha
+     196/    290a : 86 03               	ldaa	#3		; ACIA master reset
+     197/    290c : b7 20 00            	staa	sercsr
+     198/    290f : 86 56               	ldaa	#$56		; rxint off, rts- high, txint off, 8N1, div by 64
+     199/    2911 : b7 20 00            	staa	sercsr
+     200/    2914 : 32                  	pula
+     201/    2915 : 39                  	rts
+     202/    2916 :                     
+     203/    2916 :                     ser_getchar:
+     204/    2916 : b6 20 00            	ldaa	sercsr		; retrieve status register
+     205/    2919 : 84 01               	anda	#$01		; check for character received
+     206/    291b : 27 f9               	beq	ser_getchar
+     207/    291d : b6 20 01            	ldaa	serdata		; read received character
+     208/    2920 : 39                  	rts
+     209/    2921 :                     
+     210/    2921 :                     ser_putstring:
+     211/    2921 : 36                  	psha
+     212/    2922 :                     send_lp:
+     213/    2922 : a6 00               	ldaa	0,x
+     214/    2924 : 27 05               	beq	send_done
+     215/    2926 : 8d 05               	bsr	ser_putchar
+     216/    2928 : 08                  	inx
+     217/    2929 : 20 f7               	bra	send_lp
+     218/    292b :                     send_done:
+     219/    292b : 32                  	pula
+     220/    292c : 39                  	rts
+     221/    292d :                     
+     222/    292d :                     ser_putchar:
+     223/    292d :                     send_via_rts:
+     224/    292d : b7 29 71            	staa	savea
+     225/    2930 : f7 29 72            	stab	saveb
+     226/    2933 : ff 29 73            	stx	savex
+     227/    2936 :                     
+     228/    2936 :                     ser_putchar_wait:
+     229/    2936 : f6 20 00            	ldab	sercsr		; wait for serial device to assert CTS
+     230/    2939 : c4 08               	andb	#8
+     231/    293b : 26 f9               	bne	ser_putchar_wait
+     232/    293d :                     
+     233/    293d : ce 29 77            	ldx	#bitbuf+1	; put bits into bitbuf
+     234/    2940 :                     
+     235/    2940 : c6 08               	ldab	#8		; send 8 databits from A, lsb first
+     236/    2942 : f7 29 75            	stab	bitcnt	
+     237/    2945 :                     
+     238/    2945 :                     bitlp1:
+     239/    2945 : 44                  	lsra			; grab the lowest bit out of A
+     240/    2946 : 56                  	rorb			; move bit into correct position in b
+     241/    2947 : 54                  	lsrb
+     242/    2948 : c4 40               	andb	#$40		; isolate bit
+     243/    294a : ca 16               	orab	#$16		; OR in rest of required serial status register
+     244/    294c : e7 00               	stab	0,x		; save in bitbuf
+     245/    294e : 08                  	inx
+     246/    294f :                     
+     247/    294f : 7a 29 75            	dec	bitcnt
+     248/    2952 : 26 f1               	bne	bitlp1
+     249/    2954 :                     
+     250/    2954 : ce 29 76            	ldx	#bitbuf		; take prepped bits from bitbuf
+     251/    2957 : c6 0a               	ldab	#10		; send 10 bits
+     252/    2959 :                     bitlp2:
+     253/    2959 : a6 00               	ldaa	0,x
+     254/    295b : 08                  	inx
+     255/    295c : b7 20 00            	staa	sercsr		; set RTS signal
+     256/    295f :                     
+     257/    295f : =$2580              txbaud	equ	9600
+     258/    295f :                     
+     259/    295f : =>FALSE             	if	txbaud=38400
+     260/    295f :                     
+     261/    295f :                     	nop			; 3 nops (6 cycles) gives 38400 baud
+     262/    295f :                     	nop
+     263/    295f :                     	nop
+     264/    295f :                     
+     265/    295f : =>TRUE              	elseif	txbaud=9600
+     266/    295f :                     				; or waste 80 cycles for 9600 baud
+     267/    295f : 86 0d               	ldaa	#13		; (2 cycles)
+     268/    2961 :                     bitlp3:
+     269/    2961 : 4a                  	deca			; (2 cycles)
+     270/    2962 : 26 fd               	bne	bitlp3		; (4 cycles)
+     271/    2964 :                     
+     272/    2964 : =>FALSE             	elseif
+     273/    2964 :                     	
+     274/    2964 :                     	error	we don't do that txbaud yet
+     275/    2964 :                     
+     276/    2964 :                     	endif
+     277/    2964 :                     
+     278/    2964 : 5a                  	decb
+     279/    2965 : 26 f2               	bne	bitlp2
+     280/    2967 :                     
+     281/    2967 : b6 29 71            	ldaa	savea
+     282/    296a : f6 29 72            	ldab	saveb
+     283/    296d : fe 29 73            	ldx	savex
+     284/    2970 : 39                  	rts
+     285/    2971 :                     
+     286/    2971 :                     ; Constants, variables, and lists go here
+     287/    2971 :                     
+     288/    2971 :                     ; temp variables for ser_putchar
+     289/    2971 : 00                  savea:	fcb	0
+     290/    2972 : 00                  saveb:	fcb	0
+     291/    2973 : 00 00               savex:	fdb	0
+     292/    2975 : 00                  bitcnt:	fcb	0
+     293/    2976 : 16                  bitbuf:	fcb	$16		; start bit (0)
+     294/    2977 : 00 00 00 00 00 00   	fcb	0,0,0,0,0,0,0,0	; 8 data bits
+                    00 00 
+     295/    297f : 56                  	fcb	$56		; stop bit (1)
+     296/    2980 :                     
+     297/    2980 :                     plotter_init_string:
+     298/    2980 :                     		; init plotter, set scaling points, set scale factor,
+     299/    2980 :                     		; select pen #1
+     300/    2980 : 49 4e 3b 49 50 32   	fcb	"IN;IP2200,1000,8200,7000;SC0,255,0,255;SP1;",0
+                    32 30 30 2c 31 30 
+                    30 30 2c 38 32 30 
+                    30 2c 37 30 30 30 
+                    3b 53 43 30 2c 32 
+                    35 35 2c 30 2c 32 
+                    35 35 3b 53 50 31 
+                    3b 00 
+     301/    29ac :                     
+     302/    29ac :                     plotter_penaway_string:
+     303/    29ac : 53 50 30 3b 00      	fcb	"SP0;",0
+     304/    29b1 :                     
+     305/    29b1 :                     plotter_plot_absolute_string;
+     306/    29b1 : 50 41 00            	fcb	"PA",0
+     307/    29b4 :                     
+     308/    29b4 :                     plotter_penup_string;
+     309/    29b4 : 50 55 3b 00         	fcb	"PU;",0
+     310/    29b8 :                     
+     311/    29b8 :                     plotter_pendown_string;
+     312/    29b8 : 50 44 3b 00         	fcb	"PD;",0
+     313/    29bc :                     
+     314/    29bc :                     plotter_penstate:
+     315/    29bc : 00                  	fcb	0
+     316/    29bd :                     plotter_savex:
+     317/    29bd : 00 00               	fdb	0
+     318/    29bf :                     
+     319/    29bf :                     message:
+     320/    29bf : 53 50 32 3b 53 52   	fcb	"SP2;SR1.5,3.0;"
+                    31 2e 35 2c 33 2e 
+                    30 3b 
+     321/    29cd : 50 41 2d 33 35 2c   	fcb	"PA-35,280;"
+                    32 38 30 3b 
+     322/    29d7 : 4c 42 52 65 74 72   	fcb	"LB","RetroChallenge 2011 Winter Warmup on the Heathkit ET-3400A",3
+                    6f 43 68 61 6c 6c 
+                    65 6e 67 65 20 32 
+                    30 31 31 20 57 69 
+                    6e 74 65 72 20 57 
+                    61 72 6d 75 70 20 
+                    6f 6e 20 74 68 65 
+                    20 48 65 61 74 68 
+                    6b 69 74 20 45 54 
+                    2d 33 34 30 30 41 
+                    03 
+     323/    2a14 : 50 41 31 35 2c 32   	fcb	"PA15,260"
+                    36 30 
+     324/    2a1c : 4c 42 70 6c 6f 74   	fcb	"LB","plotting to the HP 7475A on Jan 31, 2011",3
+                    74 69 6e 67 20 74 
+                    6f 20 74 68 65 20 
+                    48 50 20 37 34 37 
+                    35 41 20 6f 6e 20 
+                    4a 61 6e 20 33 31 
+                    2c 20 32 30 31 31 
+                    03 
+     325/    2a47 : 00                  	fcb	0
+     326/    2a48 :                     
+     327/    2a48 :                     paleoferrosaurus_plot:
+     328/    2a48 :                     
+     329/    2a48 :                     ; 100  HGR2 
+     330/    2a48 :                     ; 110  HCOLOR= 3
+     331/    2a48 :                     ; 130  LET R1 = 90
+     332/    2a48 :                     ; 140  LET R9 = (22 / 7) / 180
+     333/    2a48 :                     ; 150  REM  DRAW A BOX
+     334/    2a48 :                     ; 160  HPLOT 0,0 TO 279,0
+     335/    2a48 :                     ; 170  HPLOT 279,0 TO 279,191
+     336/    2a48 :                     ; 180  HPLOT 279,191 TO 0,191
+     337/    2a48 :                     ; 190  HPLOT 0,191 TO 0,0
+     338/    2a48 :                     ; 275  FOR T = 0 TO 135 STEP 45
+     339/    2a48 :                     ; 300  LET RX = 10:RY = 90: GOSUB 2000
+     340/    2a48 :                     ; 320  NEXT T
+     341/    2a48 :                     ; 330  PRINT "ALL DONE!"
+     342/    2a48 :                     ; 999  END 
+     343/    2a48 :                     ; 2000  REM  DRAW A DASHED ELLIPSE
+     344/    2a48 :                     ; 2001  LET F = 0
+     345/    2a48 :                     ; 2010  REM 
+     346/    2a48 :                     ; 2020  FOR I = 0 TO 360 STEP 10
+     347/    2a48 :                     ; 2040  LET X2 = RX *  COS (I * R9)
+     348/    2a48 :                     ; 2050  LET Y2 = RY *  SIN (I * R9)
+     349/    2a48 :                     ; 2060 X9 = X2 *  COS (T * R9) + Y2 *  SIN (T * R9)
+     350/    2a48 :                     ; 2070 Y9 = Y2 *  COS (T * R9) - X2 *  SIN (T * R9)
+     351/    2a48 :                     ; 2071  IF F1 = 0 THEN 2080
+     352/    2a48 :                     ; 2072  HPLOT X5,Y5 TO 140 + X9,96 + Y9
+     353/    2a48 :                     ; 2073  GOTO 2081
+     354/    2a48 :                     ; 2080  HPLOT 140 + X9,96 + Y9
+     355/    2a48 :                     ; 2081 F1 = 255
+     356/    2a48 :                     ; 2082  LET X5 = 140 + X9
+     357/    2a48 :                     ; 2083  LET Y5 = 96 + Y9
+     358/    2a48 :                     ; 2090  NEXT I
+     359/    2a48 :                     ; 2100  RETURN 
+     360/    2a48 :                     
+     361/    2a48 : =0.017453292..      r9	set	CONSTPI / 180.0		; radians per degree
+     362/    2a48 : =$7f                maxr	set	127
+     363/    2a48 : =12.7               rx	set	maxr * 0.1		; ellipse length w/ x scale factor
+     364/    2a48 : =114.3              ry	set	maxr * 0.9		; ellipse length w/ y scale factor
+     365/    2a48 : =$80                cx	set	128			; center x,y
+     366/    2a48 : =$80                cy	set	128
+     367/    2a48 :                     					; draw a box
+     368/    2a48 : 01 01               	fcb	cx-maxr,cy-maxr		;  lower-left
+     369/    2a4a : ff 01               	fcb	cx+maxr,cy-maxr		;  to lower-right
+     370/    2a4c : ff ff               	fcb	cx+maxr,cy+maxr		;  to upper-right
+     371/    2a4e : 01 ff               	fcb	cx-maxr,cy+maxr		;  to upper-left
+     372/    2a50 : 01 01               	fcb	cx-maxr,cy-maxr		;  and back to lower-left
+     373/    2a52 : 00 01               	fcb	0,1
+     374/    2a54 :                     
+     375/    2a54 : =$0                 t	set	0			; for t=0 to 135 step 45
+     376/    2a54 :                     	rept	4
+     377/    2a54 :                     
+     378/    2a54 :                     f	set	0			; f=0
+     379/    2a54 :                     
+     380/    2a54 :                     i	set	0			; for i=0 to 360 step 10
+     381/    2a54 :                     	rept	37
+     382/    2a54 :                     
+     383/    2a54 :                     x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a54 :                     y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a54 :                     x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a54 :                     y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a54 :                     
+     388/    2a54 :                     	fcb	int(cx + x9), int(cy + y9)
+     389/    2a54 :                     
+     390/    2a54 :                     i	set	i+10
+     391/    2a54 :                     	endm
+     392/    2a54 :                     	fcb	0,1			; x=0,y=1 in the stream indicates pen-up
+     393/    2a54 :                     
+     394/    2a54 :                     t	set	t+45
+     395/    2a54 :                     	endm
+     377/    2a54 :                     
+     378/    2a54 : =$0                 f	set	0			; f=0
+     379/    2a54 :                     
+     380/    2a54 : =$0                 i	set	0			; for i=0 to 360 step 10
+     381/    2a54 :                     	rept	37
+     382/    2a54 :                     
+     383/    2a54 :                     x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a54 :                     y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a54 :                     x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a54 :                     y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a54 :                     
+     388/    2a54 :                     	fcb	int(cx + x9), int(cy + y9)
+     389/    2a54 :                     
+     390/    2a54 :                     i	set	i+10
+     391/    2a54 :                     	endm
+     382/    2a54 :                     
+     383/    2a54 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a54 : =0                  y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a54 : =12.7               x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a54 : =0                  y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a54 :                     
+     388/    2a54 : 8c 80               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a56 :                     
+     390/    2a56 : =$a                 i	set	i+10
+     382/    2a56 :                     
+     383/    2a56 : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a56 : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a56 : =12.50705846..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a56 : =19.84798670..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a56 :                     
+     388/    2a56 : 8c 93               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a58 :                     
+     390/    2a58 : =$14                i	set	i+10
+     382/    2a58 :                     
+     383/    2a58 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a58 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a58 : =11.93409628..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a58 : =39.09290238..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a58 :                     
+     388/    2a58 : 8b a7               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a5a :                     
+     390/    2a5a : =$1e                i	set	i+10
+     382/    2a5a :                     
+     383/    2a5a : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a5a : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a5a : =10.99852262..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a5a : =57.14999999..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a5a :                     
+     388/    2a5a : 8a b9               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a5c :                     
+     390/    2a5c : =$28                i	set	i+10
+     382/    2a5c :                     
+     383/    2a5c : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a5c : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a5c : =9.728764427..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a5c : =73.47062378..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a5c :                     
+     388/    2a5c : 89 c9               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a5e :                     
+     390/    2a5e : =$32                i	set	i+10
+     382/    2a5e :                     
+     383/    2a5e : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a5e : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a5e : =8.163402643..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a5e : =87.55887984..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a5e :                     
+     388/    2a5e : 88 d7               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a60 :                     
+     390/    2a60 : =$3c                i	set	i+10
+     382/    2a60 :                     
+     383/    2a60 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a60 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a60 : =6.350000000..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a60 : =98.98670365..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a60 :                     
+     388/    2a60 : 86 e2               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a62 :                     
+     390/    2a62 : =$46                i	set	i+10
+     382/    2a62 :                     
+     383/    2a62 : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a62 : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a62 : =4.343655820..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a62 : =107.4068665..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a62 :                     
+     388/    2a62 : 84 eb               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a64 :                     
+     390/    2a64 : =$50                i	set	i+10
+     382/    2a64 :                     
+     383/    2a64 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a64 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a64 : =2.205331856..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a64 : =112.5635261..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a64 :                     
+     388/    2a64 : 82 f0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a66 :                     
+     390/    2a66 : =$5a                i	set	i+10
+     382/    2a66 :                     
+     383/    2a66 : =7.776507174..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a66 : =114.3              y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a66 : =7.776507174..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a66 : =114.3              y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a66 :                     
+     388/    2a66 : 80 f2               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a68 :                     
+     390/    2a68 : =$64                i	set	i+10
+     382/    2a68 :                     
+     383/    2a68 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a68 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a68 : =-2.20533185..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a68 : =112.5635261..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a68 :                     
+     388/    2a68 : 7d f0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a6a :                     
+     390/    2a6a : =$6e                i	set	i+10
+     382/    2a6a :                     
+     383/    2a6a : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a6a : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a6a : =-4.34365582..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a6a : =107.4068665..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a6a :                     
+     388/    2a6a : 7b eb               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a6c :                     
+     390/    2a6c : =$78                i	set	i+10
+     382/    2a6c :                     
+     383/    2a6c : =-6.34999999..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a6c : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a6c : =-6.34999999..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a6c : =98.98670365..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a6c :                     
+     388/    2a6c : 79 e2               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a6e :                     
+     390/    2a6e : =$82                i	set	i+10
+     382/    2a6e :                     
+     383/    2a6e : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a6e : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a6e : =-8.16340264..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a6e : =87.55887984..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a6e :                     
+     388/    2a6e : 77 d7               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a70 :                     
+     390/    2a70 : =$8c                i	set	i+10
+     382/    2a70 :                     
+     383/    2a70 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a70 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a70 : =-9.72876442..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a70 : =73.47062378..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a70 :                     
+     388/    2a70 : 76 c9               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a72 :                     
+     390/    2a72 : =$96                i	set	i+10
+     382/    2a72 :                     
+     383/    2a72 : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a72 : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a72 : =-10.9985226..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a72 : =57.14999999..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a72 :                     
+     388/    2a72 : 75 b9               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a74 :                     
+     390/    2a74 : =$a0                i	set	i+10
+     382/    2a74 :                     
+     383/    2a74 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a74 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a74 : =-11.9340962..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a74 : =39.09290238..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a74 :                     
+     388/    2a74 : 74 a7               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a76 :                     
+     390/    2a76 : =$aa                i	set	i+10
+     382/    2a76 :                     
+     383/    2a76 : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a76 : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a76 : =-12.5070584..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a76 : =19.84798670..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a76 :                     
+     388/    2a76 : 73 93               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a78 :                     
+     390/    2a78 : =$b4                i	set	i+10
+     382/    2a78 :                     
+     383/    2a78 : =-12.7              x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a78 : =1.399771291..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a78 : =-12.7              x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a78 : =1.399771291..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a78 :                     
+     388/    2a78 : 73 80               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a7a :                     
+     390/    2a7a : =$be                i	set	i+10
+     382/    2a7a :                     
+     383/    2a7a : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a7a : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a7a : =-12.5070584..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a7a : =-19.8479867..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a7a :                     
+     388/    2a7a : 73 6c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a7c :                     
+     390/    2a7c : =$c8                i	set	i+10
+     382/    2a7c :                     
+     383/    2a7c : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a7c : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a7c : =-11.9340962..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a7c : =-39.0929023..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a7c :                     
+     388/    2a7c : 74 58               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a7e :                     
+     390/    2a7e : =$d2                i	set	i+10
+     382/    2a7e :                     
+     383/    2a7e : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a7e : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a7e : =-10.9985226..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a7e : =-57.1500000..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a7e :                     
+     388/    2a7e : 75 46               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a80 :                     
+     390/    2a80 : =$dc                i	set	i+10
+     382/    2a80 :                     
+     383/    2a80 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a80 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a80 : =-9.72876442..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a80 : =-73.4706237..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a80 :                     
+     388/    2a80 : 76 36               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a82 :                     
+     390/    2a82 : =$e6                i	set	i+10
+     382/    2a82 :                     
+     383/    2a82 : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a82 : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a82 : =-8.16340264..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a82 : =-87.5588798..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a82 :                     
+     388/    2a82 : 77 28               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a84 :                     
+     390/    2a84 : =$f0                i	set	i+10
+     382/    2a84 :                     
+     383/    2a84 : =-6.35000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a84 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a84 : =-6.35000000..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a84 : =-98.9867036..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a84 :                     
+     388/    2a84 : 79 1d               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a86 :                     
+     390/    2a86 : =$fa                i	set	i+10
+     382/    2a86 :                     
+     383/    2a86 : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a86 : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a86 : =-4.34365582..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a86 : =-107.406866..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a86 :                     
+     388/    2a86 : 7b 14               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a88 :                     
+     390/    2a88 : =$104               i	set	i+10
+     382/    2a88 :                     
+     383/    2a88 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a88 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a88 : =-2.20533185..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a88 : =-112.563526..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a88 :                     
+     388/    2a88 : 7d 0f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a8a :                     
+     390/    2a8a : =$10e               i	set	i+10
+     382/    2a8a :                     
+     383/    2a8a : =-2.33295215..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a8a : =-114.3             y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a8a : =-2.33295215..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a8a : =-114.3             y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a8a :                     
+     388/    2a8a : 80 0d               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a8c :                     
+     390/    2a8c : =$118               i	set	i+10
+     382/    2a8c :                     
+     383/    2a8c : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a8c : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a8c : =2.205331856..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a8c : =-112.563526..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a8c :                     
+     388/    2a8c : 82 0f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a8e :                     
+     390/    2a8e : =$122               i	set	i+10
+     382/    2a8e :                     
+     383/    2a8e : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a8e : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a8e : =4.343655820..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a8e : =-107.406866..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a8e :                     
+     388/    2a8e : 84 14               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a90 :                     
+     390/    2a90 : =$12c               i	set	i+10
+     382/    2a90 :                     
+     383/    2a90 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a90 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a90 : =6.350000000..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a90 : =-98.9867036..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a90 :                     
+     388/    2a90 : 86 1d               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a92 :                     
+     390/    2a92 : =$136               i	set	i+10
+     382/    2a92 :                     
+     383/    2a92 : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a92 : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a92 : =8.163402643..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a92 : =-87.5588798..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a92 :                     
+     388/    2a92 : 88 28               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a94 :                     
+     390/    2a94 : =$140               i	set	i+10
+     382/    2a94 :                     
+     383/    2a94 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a94 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a94 : =9.728764427..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a94 : =-73.4706237..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a94 :                     
+     388/    2a94 : 89 36               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a96 :                     
+     390/    2a96 : =$14a               i	set	i+10
+     382/    2a96 :                     
+     383/    2a96 : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a96 : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a96 : =10.99852262..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a96 : =-57.1500000..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a96 :                     
+     388/    2a96 : 8a 46               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a98 :                     
+     390/    2a98 : =$154               i	set	i+10
+     382/    2a98 :                     
+     383/    2a98 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a98 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a98 : =11.93409628..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a98 : =-39.0929023..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a98 :                     
+     388/    2a98 : 8b 58               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a9a :                     
+     390/    2a9a : =$15e               i	set	i+10
+     382/    2a9a :                     
+     383/    2a9a : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a9a : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a9a : =12.50705846..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a9a : =-19.8479867..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a9a :                     
+     388/    2a9a : 8c 6c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a9c :                     
+     390/    2a9c : =$168               i	set	i+10
+     382/    2a9c :                     
+     383/    2a9c : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2a9c : =-2.79954258..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2a9c : =12.7               x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2a9c : =-2.79954258..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2a9c :                     
+     388/    2a9c : 8c 7f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2a9e :                     
+     390/    2a9e : =$172               i	set	i+10
+     392/    2a9e : 00 01               	fcb	0,1			; x=0,y=1 in the stream indicates pen-up
+     393/    2aa0 :                     
+     394/    2aa0 : =$2d                t	set	t+45
+     377/    2aa0 :                     
+     378/    2aa0 : =$0                 f	set	0			; f=0
+     379/    2aa0 :                     
+     380/    2aa0 : =$0                 i	set	0			; for i=0 to 360 step 10
+     381/    2aa0 :                     	rept	37
+     382/    2aa0 :                     
+     383/    2aa0 :                     x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa0 :                     y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa0 :                     x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa0 :                     y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa0 :                     
+     388/    2aa0 :                     	fcb	int(cx + x9), int(cy + y9)
+     389/    2aa0 :                     
+     390/    2aa0 :                     i	set	i+10
+     391/    2aa0 :                     	endm
+     382/    2aa0 :                     
+     383/    2aa0 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa0 : =0                  y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa0 : =8.980256121..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa0 : =-8.98025612..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa0 :                     
+     388/    2aa0 : 88 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aa2 :                     
+     390/    2aa2 : =$a                 i	set	i+10
+     382/    2aa2 :                     
+     383/    2aa2 : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa2 : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa2 : =22.87847184..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa2 : =5.190820141..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa2 :                     
+     388/    2aa2 : 96 85               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aa4 :                     
+     390/    2aa4 : =$14                i	set	i+10
+     382/    2aa4 :                     
+     383/    2aa4 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa4 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa4 : =36.08153678..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa4 : =19.20417596..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa4 :                     
+     388/    2aa4 : a4 93               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aa6 :                     
+     390/    2aa6 : =$1e                i	set	i+10
+     382/    2aa6 :                     
+     383/    2aa6 : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa6 : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa6 : =48.18828247..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa6 : =32.63402261..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa6 :                     
+     388/    2aa6 : b0 a0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aa8 :                     
+     390/    2aa8 : =$28                i	set	i+10
+     382/    2aa8 :                     
+     383/    2aa8 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aa8 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aa8 : =58.83085159..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aa8 : =45.07230099..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aa8 :                     
+     388/    2aa8 : ba ad               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aaa :                     
+     390/    2aaa : =$32                i	set	i+10
+     382/    2aaa :                     
+     383/    2aaa : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aaa : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aaa : =67.68587506..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aaa : =56.14108032..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aaa :                     
+     388/    2aaa : c3 b8               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aac :                     
+     390/    2aac : =$3c                i	set	i+10
+     382/    2aac :                     
+     383/    2aac : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aac : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aac : =74.48429746..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aac : =65.50404133..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aac :                     
+     388/    2aac : ca c1               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aae :                     
+     390/    2aae : =$46                i	set	i+10
+     382/    2aae :                     
+     383/    2aae : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aae : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aae : =79.01955217..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aae : =72.87669520..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aae :                     
+     388/    2aae : cf c8               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ab0 :                     
+     390/    2ab0 : =$50                i	set	i+10
+     382/    2ab0 :                     
+     383/    2ab0 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ab0 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ab0 : =81.15383777..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ab0 : =78.03502755..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ab0 :                     
+     388/    2ab0 : d1 ce               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ab2 :                     
+     390/    2ab2 : =$5a                i	set	i+10
+     382/    2ab2 :                     
+     383/    2ab2 : =7.776507174..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ab2 : =114.3              y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ab2 : =80.82230508..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ab2 : =80.82230508..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ab2 :                     
+     388/    2ab2 : d0 d0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ab4 :                     
+     390/    2ab4 : =$64                i	set	i+10
+     382/    2ab4 :                     
+     383/    2ab4 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ab4 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ab4 : =78.03502755..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ab4 : =81.15383777..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ab4 :                     
+     388/    2ab4 : ce d1               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ab6 :                     
+     390/    2ab6 : =$6e                i	set	i+10
+     382/    2ab6 :                     
+     383/    2ab6 : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ab6 : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ab6 : =72.87669520..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ab6 : =79.01955217..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ab6 :                     
+     388/    2ab6 : c8 cf               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ab8 :                     
+     390/    2ab8 : =$78                i	set	i+10
+     382/    2ab8 :                     
+     383/    2ab8 : =-6.34999999..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ab8 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ab8 : =65.50404133..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ab8 : =74.48429746..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ab8 :                     
+     388/    2ab8 : c1 ca               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aba :                     
+     390/    2aba : =$82                i	set	i+10
+     382/    2aba :                     
+     383/    2aba : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aba : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aba : =56.14108032..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aba : =67.68587506..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aba :                     
+     388/    2aba : b8 c3               	fcb	int(cx + x9), int(cy + y9)
+     389/    2abc :                     
+     390/    2abc : =$8c                i	set	i+10
+     382/    2abc :                     
+     383/    2abc : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2abc : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2abc : =45.07230099..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2abc : =58.83085159..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2abc :                     
+     388/    2abc : ad ba               	fcb	int(cx + x9), int(cy + y9)
+     389/    2abe :                     
+     390/    2abe : =$96                i	set	i+10
+     382/    2abe :                     
+     383/    2abe : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2abe : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2abe : =32.63402261..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2abe : =48.18828247..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2abe :                     
+     388/    2abe : a0 b0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ac0 :                     
+     390/    2ac0 : =$a0                i	set	i+10
+     382/    2ac0 :                     
+     383/    2ac0 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ac0 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ac0 : =19.20417596..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ac0 : =36.08153678..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ac0 :                     
+     388/    2ac0 : 93 a4               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ac2 :                     
+     390/    2ac2 : =$aa                i	set	i+10
+     382/    2ac2 :                     
+     383/    2ac2 : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ac2 : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ac2 : =5.190820141..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ac2 : =22.87847184..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ac2 :                     
+     388/    2ac2 : 85 96               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ac4 :                     
+     390/    2ac4 : =$b4                i	set	i+10
+     382/    2ac4 :                     
+     383/    2ac4 : =-12.7              x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ac4 : =1.399771291..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ac4 : =-8.98025612..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ac4 : =8.980256121..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ac4 :                     
+     388/    2ac4 : 77 88               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ac6 :                     
+     390/    2ac6 : =$be                i	set	i+10
+     382/    2ac6 :                     
+     383/    2ac6 : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ac6 : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ac6 : =-22.8784718..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ac6 : =-5.19082014..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ac6 :                     
+     388/    2ac6 : 69 7a               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ac8 :                     
+     390/    2ac8 : =$c8                i	set	i+10
+     382/    2ac8 :                     
+     383/    2ac8 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ac8 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ac8 : =-36.0815367..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ac8 : =-19.2041759..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ac8 :                     
+     388/    2ac8 : 5b 6c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aca :                     
+     390/    2aca : =$d2                i	set	i+10
+     382/    2aca :                     
+     383/    2aca : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aca : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aca : =-48.1882824..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aca : =-32.6340226..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aca :                     
+     388/    2aca : 4f 5f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2acc :                     
+     390/    2acc : =$dc                i	set	i+10
+     382/    2acc :                     
+     383/    2acc : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2acc : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2acc : =-58.8308515..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2acc : =-45.0723009..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2acc :                     
+     388/    2acc : 45 52               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ace :                     
+     390/    2ace : =$e6                i	set	i+10
+     382/    2ace :                     
+     383/    2ace : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ace : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ace : =-67.6858750..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ace : =-56.1410803..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ace :                     
+     388/    2ace : 3c 47               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ad0 :                     
+     390/    2ad0 : =$f0                i	set	i+10
+     382/    2ad0 :                     
+     383/    2ad0 : =-6.35000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ad0 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ad0 : =-74.4842974..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ad0 : =-65.5040413..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ad0 :                     
+     388/    2ad0 : 35 3e               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ad2 :                     
+     390/    2ad2 : =$fa                i	set	i+10
+     382/    2ad2 :                     
+     383/    2ad2 : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ad2 : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ad2 : =-79.0195521..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ad2 : =-72.8766952..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ad2 :                     
+     388/    2ad2 : 30 37               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ad4 :                     
+     390/    2ad4 : =$104               i	set	i+10
+     382/    2ad4 :                     
+     383/    2ad4 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ad4 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ad4 : =-81.1538377..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ad4 : =-78.0350275..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ad4 :                     
+     388/    2ad4 : 2e 31               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ad6 :                     
+     390/    2ad6 : =$10e               i	set	i+10
+     382/    2ad6 :                     
+     383/    2ad6 : =-2.33295215..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ad6 : =-114.3             y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ad6 : =-80.8223050..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ad6 : =-80.8223050..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ad6 :                     
+     388/    2ad6 : 2f 2f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ad8 :                     
+     390/    2ad8 : =$118               i	set	i+10
+     382/    2ad8 :                     
+     383/    2ad8 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ad8 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ad8 : =-78.0350275..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ad8 : =-81.1538377..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ad8 :                     
+     388/    2ad8 : 31 2e               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ada :                     
+     390/    2ada : =$122               i	set	i+10
+     382/    2ada :                     
+     383/    2ada : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ada : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ada : =-72.8766952..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ada : =-79.0195521..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ada :                     
+     388/    2ada : 37 30               	fcb	int(cx + x9), int(cy + y9)
+     389/    2adc :                     
+     390/    2adc : =$12c               i	set	i+10
+     382/    2adc :                     
+     383/    2adc : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2adc : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2adc : =-65.5040413..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2adc : =-74.4842974..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2adc :                     
+     388/    2adc : 3e 35               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ade :                     
+     390/    2ade : =$136               i	set	i+10
+     382/    2ade :                     
+     383/    2ade : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ade : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ade : =-56.1410803..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ade : =-67.6858750..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ade :                     
+     388/    2ade : 47 3c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ae0 :                     
+     390/    2ae0 : =$140               i	set	i+10
+     382/    2ae0 :                     
+     383/    2ae0 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ae0 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ae0 : =-45.0723009..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ae0 : =-58.8308515..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ae0 :                     
+     388/    2ae0 : 52 45               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ae2 :                     
+     390/    2ae2 : =$14a               i	set	i+10
+     382/    2ae2 :                     
+     383/    2ae2 : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ae2 : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ae2 : =-32.6340226..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ae2 : =-48.1882824..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ae2 :                     
+     388/    2ae2 : 5f 4f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ae4 :                     
+     390/    2ae4 : =$154               i	set	i+10
+     382/    2ae4 :                     
+     383/    2ae4 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ae4 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ae4 : =-19.2041759..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ae4 : =-36.0815367..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ae4 :                     
+     388/    2ae4 : 6c 5b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ae6 :                     
+     390/    2ae6 : =$15e               i	set	i+10
+     382/    2ae6 :                     
+     383/    2ae6 : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ae6 : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ae6 : =-5.19082014..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ae6 : =-22.8784718..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ae6 :                     
+     388/    2ae6 : 7a 69               	fcb	int(cx + x9), int(cy + y9)
+     389/    2ae8 :                     
+     390/    2ae8 : =$168               i	set	i+10
+     382/    2ae8 :                     
+     383/    2ae8 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2ae8 : =-2.79954258..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2ae8 : =8.980256121..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2ae8 : =-8.98025612..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2ae8 :                     
+     388/    2ae8 : 88 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aea :                     
+     390/    2aea : =$172               i	set	i+10
+     392/    2aea : 00 01               	fcb	0,1			; x=0,y=1 in the stream indicates pen-up
+     393/    2aec :                     
+     394/    2aec : =$5a                t	set	t+45
+     377/    2aec :                     
+     378/    2aec : =$0                 f	set	0			; f=0
+     379/    2aec :                     
+     380/    2aec : =$0                 i	set	0			; for i=0 to 360 step 10
+     381/    2aec :                     	rept	37
+     382/    2aec :                     
+     383/    2aec :                     x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aec :                     y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aec :                     x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aec :                     y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aec :                     
+     388/    2aec :                     	fcb	int(cx + x9), int(cy + y9)
+     389/    2aec :                     
+     390/    2aec :                     i	set	i+10
+     391/    2aec :                     	endm
+     382/    2aec :                     
+     383/    2aec : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aec : =0                  y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aec : =7.776507174..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aec : =-12.7              y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aec :                     
+     388/    2aec : 80 73               	fcb	int(cx + x9), int(cy + y9)
+     389/    2aee :                     
+     390/    2aee : =$a                 i	set	i+10
+     382/    2aee :                     
+     383/    2aee : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2aee : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2aee : =19.84798670..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2aee : =-12.5070584..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2aee :                     
+     388/    2aee : 93 73               	fcb	int(cx + x9), int(cy + y9)
+     389/    2af0 :                     
+     390/    2af0 : =$14                i	set	i+10
+     382/    2af0 :                     
+     383/    2af0 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2af0 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2af0 : =39.09290238..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2af0 : =-11.9340962..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2af0 :                     
+     388/    2af0 : a7 74               	fcb	int(cx + x9), int(cy + y9)
+     389/    2af2 :                     
+     390/    2af2 : =$1e                i	set	i+10
+     382/    2af2 :                     
+     383/    2af2 : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2af2 : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2af2 : =57.14999999..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2af2 : =-10.9985226..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2af2 :                     
+     388/    2af2 : b9 75               	fcb	int(cx + x9), int(cy + y9)
+     389/    2af4 :                     
+     390/    2af4 : =$28                i	set	i+10
+     382/    2af4 :                     
+     383/    2af4 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2af4 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2af4 : =73.47062378..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2af4 : =-9.72876442..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2af4 :                     
+     388/    2af4 : c9 76               	fcb	int(cx + x9), int(cy + y9)
+     389/    2af6 :                     
+     390/    2af6 : =$32                i	set	i+10
+     382/    2af6 :                     
+     383/    2af6 : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2af6 : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2af6 : =87.55887984..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2af6 : =-8.16340264..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2af6 :                     
+     388/    2af6 : d7 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2af8 :                     
+     390/    2af8 : =$3c                i	set	i+10
+     382/    2af8 :                     
+     383/    2af8 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2af8 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2af8 : =98.98670365..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2af8 : =-6.34999999..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2af8 :                     
+     388/    2af8 : e2 79               	fcb	int(cx + x9), int(cy + y9)
+     389/    2afa :                     
+     390/    2afa : =$46                i	set	i+10
+     382/    2afa :                     
+     383/    2afa : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2afa : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2afa : =107.4068665..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2afa : =-4.34365582..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2afa :                     
+     388/    2afa : eb 7b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2afc :                     
+     390/    2afc : =$50                i	set	i+10
+     382/    2afc :                     
+     383/    2afc : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2afc : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2afc : =112.5635261..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2afc : =-2.20533185..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2afc :                     
+     388/    2afc : f0 7d               	fcb	int(cx + x9), int(cy + y9)
+     389/    2afe :                     
+     390/    2afe : =$5a                i	set	i+10
+     382/    2afe :                     
+     383/    2afe : =7.776507174..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2afe : =114.3              y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2afe : =114.3              x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2afe : =6.221205739..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2afe :                     
+     388/    2afe : f2 80               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b00 :                     
+     390/    2b00 : =$64                i	set	i+10
+     382/    2b00 :                     
+     383/    2b00 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b00 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b00 : =112.5635261..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b00 : =2.205331856..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b00 :                     
+     388/    2b00 : f0 82               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b02 :                     
+     390/    2b02 : =$6e                i	set	i+10
+     382/    2b02 :                     
+     383/    2b02 : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b02 : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b02 : =107.4068665..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b02 : =4.343655820..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b02 :                     
+     388/    2b02 : eb 84               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b04 :                     
+     390/    2b04 : =$78                i	set	i+10
+     382/    2b04 :                     
+     383/    2b04 : =-6.34999999..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b04 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b04 : =98.98670365..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b04 : =6.350000000..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b04 :                     
+     388/    2b04 : e2 86               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b06 :                     
+     390/    2b06 : =$82                i	set	i+10
+     382/    2b06 :                     
+     383/    2b06 : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b06 : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b06 : =87.55887984..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b06 : =8.163402643..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b06 :                     
+     388/    2b06 : d7 88               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b08 :                     
+     390/    2b08 : =$8c                i	set	i+10
+     382/    2b08 :                     
+     383/    2b08 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b08 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b08 : =73.47062378..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b08 : =9.728764427..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b08 :                     
+     388/    2b08 : c9 89               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b0a :                     
+     390/    2b0a : =$96                i	set	i+10
+     382/    2b0a :                     
+     383/    2b0a : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b0a : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b0a : =57.14999999..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b0a : =10.99852262..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b0a :                     
+     388/    2b0a : b9 8a               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b0c :                     
+     390/    2b0c : =$a0                i	set	i+10
+     382/    2b0c :                     
+     383/    2b0c : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b0c : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b0c : =39.09290238..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b0c : =11.93409628..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b0c :                     
+     388/    2b0c : a7 8b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b0e :                     
+     390/    2b0e : =$aa                i	set	i+10
+     382/    2b0e :                     
+     383/    2b0e : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b0e : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b0e : =19.84798670..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b0e : =12.50705846..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b0e :                     
+     388/    2b0e : 93 8c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b10 :                     
+     390/    2b10 : =$b4                i	set	i+10
+     382/    2b10 :                     
+     383/    2b10 : =-12.7              x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b10 : =1.399771291..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b10 : =1.322006219..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b10 : =12.7               y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b10 :                     
+     388/    2b10 : 80 8c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b12 :                     
+     390/    2b12 : =$be                i	set	i+10
+     382/    2b12 :                     
+     383/    2b12 : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b12 : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b12 : =-19.8479867..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b12 : =12.50705846..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b12 :                     
+     388/    2b12 : 6c 8c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b14 :                     
+     390/    2b14 : =$c8                i	set	i+10
+     382/    2b14 :                     
+     383/    2b14 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b14 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b14 : =-39.0929023..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b14 : =11.93409628..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b14 :                     
+     388/    2b14 : 58 8b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b16 :                     
+     390/    2b16 : =$d2                i	set	i+10
+     382/    2b16 :                     
+     383/    2b16 : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b16 : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b16 : =-57.1500000..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b16 : =10.99852262..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b16 :                     
+     388/    2b16 : 46 8a               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b18 :                     
+     390/    2b18 : =$dc                i	set	i+10
+     382/    2b18 :                     
+     383/    2b18 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b18 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b18 : =-73.4706237..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b18 : =9.728764427..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b18 :                     
+     388/    2b18 : 36 89               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b1a :                     
+     390/    2b1a : =$e6                i	set	i+10
+     382/    2b1a :                     
+     383/    2b1a : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b1a : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b1a : =-87.5588798..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b1a : =8.163402643..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b1a :                     
+     388/    2b1a : 28 88               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b1c :                     
+     390/    2b1c : =$f0                i	set	i+10
+     382/    2b1c :                     
+     383/    2b1c : =-6.35000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b1c : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b1c : =-98.9867036..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b1c : =6.35               y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b1c :                     
+     388/    2b1c : 1d 86               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b1e :                     
+     390/    2b1e : =$fa                i	set	i+10
+     382/    2b1e :                     
+     383/    2b1e : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b1e : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b1e : =-107.406866..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b1e : =4.343655820..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b1e :                     
+     388/    2b1e : 14 84               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b20 :                     
+     390/    2b20 : =$104               i	set	i+10
+     382/    2b20 :                     
+     383/    2b20 : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b20 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b20 : =-112.563526..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b20 : =2.205331856..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b20 :                     
+     388/    2b20 : 0f 82               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b22 :                     
+     390/    2b22 : =$10e               i	set	i+10
+     382/    2b22 :                     
+     383/    2b22 : =-2.33295215..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b22 : =-114.3             y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b22 : =-114.3             x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b22 : =-4.66590430..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b22 :                     
+     388/    2b22 : 0d 80               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b24 :                     
+     390/    2b24 : =$118               i	set	i+10
+     382/    2b24 :                     
+     383/    2b24 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b24 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b24 : =-112.563526..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b24 : =-2.20533185..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b24 :                     
+     388/    2b24 : 0f 7d               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b26 :                     
+     390/    2b26 : =$122               i	set	i+10
+     382/    2b26 :                     
+     383/    2b26 : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b26 : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b26 : =-107.406866..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b26 : =-4.34365582..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b26 :                     
+     388/    2b26 : 14 7b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b28 :                     
+     390/    2b28 : =$12c               i	set	i+10
+     382/    2b28 :                     
+     383/    2b28 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b28 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b28 : =-98.9867036..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b28 : =-6.35000000..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b28 :                     
+     388/    2b28 : 1d 79               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b2a :                     
+     390/    2b2a : =$136               i	set	i+10
+     382/    2b2a :                     
+     383/    2b2a : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b2a : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b2a : =-87.5588798..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b2a : =-8.16340264..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b2a :                     
+     388/    2b2a : 28 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b2c :                     
+     390/    2b2c : =$140               i	set	i+10
+     382/    2b2c :                     
+     383/    2b2c : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b2c : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b2c : =-73.4706237..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b2c : =-9.72876442..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b2c :                     
+     388/    2b2c : 36 76               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b2e :                     
+     390/    2b2e : =$14a               i	set	i+10
+     382/    2b2e :                     
+     383/    2b2e : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b2e : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b2e : =-57.1500000..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b2e : =-10.9985226..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b2e :                     
+     388/    2b2e : 46 75               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b30 :                     
+     390/    2b30 : =$154               i	set	i+10
+     382/    2b30 :                     
+     383/    2b30 : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b30 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b30 : =-39.0929023..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b30 : =-11.9340962..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b30 :                     
+     388/    2b30 : 58 74               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b32 :                     
+     390/    2b32 : =$15e               i	set	i+10
+     382/    2b32 :                     
+     383/    2b32 : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b32 : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b32 : =-19.8479867..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b32 : =-12.5070584..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b32 :                     
+     388/    2b32 : 6c 73               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b34 :                     
+     390/    2b34 : =$168               i	set	i+10
+     382/    2b34 :                     
+     383/    2b34 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b34 : =-2.79954258..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b34 : =-2.72177751..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b34 : =-12.7              y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b34 :                     
+     388/    2b34 : 7f 73               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b36 :                     
+     390/    2b36 : =$172               i	set	i+10
+     392/    2b36 : 00 01               	fcb	0,1			; x=0,y=1 in the stream indicates pen-up
+     393/    2b38 :                     
+     394/    2b38 : =$87                t	set	t+45
+     377/    2b38 :                     
+     378/    2b38 : =$0                 f	set	0			; f=0
+     379/    2b38 :                     
+     380/    2b38 : =$0                 i	set	0			; for i=0 to 360 step 10
+     381/    2b38 :                     	rept	37
+     382/    2b38 :                     
+     383/    2b38 :                     x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b38 :                     y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b38 :                     x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b38 :                     y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b38 :                     
+     388/    2b38 :                     	fcb	int(cx + x9), int(cy + y9)
+     389/    2b38 :                     
+     390/    2b38 :                     i	set	i+10
+     391/    2b38 :                     	endm
+     382/    2b38 :                     
+     383/    2b38 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b38 : =0                  y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b38 : =-8.98025612..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b38 : =-8.98025612..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b38 :                     
+     388/    2b38 : 77 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b3a :                     
+     390/    2b3a : =$a                 i	set	i+10
+     382/    2b3a :                     
+     383/    2b3a : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b3a : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b3a : =5.190820141..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b3a : =-22.8784718..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b3a :                     
+     388/    2b3a : 85 69               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b3c :                     
+     390/    2b3c : =$14                i	set	i+10
+     382/    2b3c :                     
+     383/    2b3c : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b3c : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b3c : =19.20417596..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b3c : =-36.0815367..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b3c :                     
+     388/    2b3c : 93 5b               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b3e :                     
+     390/    2b3e : =$1e                i	set	i+10
+     382/    2b3e :                     
+     383/    2b3e : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b3e : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b3e : =32.63402261..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b3e : =-48.1882824..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b3e :                     
+     388/    2b3e : a0 4f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b40 :                     
+     390/    2b40 : =$28                i	set	i+10
+     382/    2b40 :                     
+     383/    2b40 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b40 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b40 : =45.07230099..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b40 : =-58.8308515..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b40 :                     
+     388/    2b40 : ad 45               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b42 :                     
+     390/    2b42 : =$32                i	set	i+10
+     382/    2b42 :                     
+     383/    2b42 : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b42 : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b42 : =56.14108032..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b42 : =-67.6858750..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b42 :                     
+     388/    2b42 : b8 3c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b44 :                     
+     390/    2b44 : =$3c                i	set	i+10
+     382/    2b44 :                     
+     383/    2b44 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b44 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b44 : =65.50404133..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b44 : =-74.4842974..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b44 :                     
+     388/    2b44 : c1 35               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b46 :                     
+     390/    2b46 : =$46                i	set	i+10
+     382/    2b46 :                     
+     383/    2b46 : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b46 : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b46 : =72.87669520..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b46 : =-79.0195521..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b46 :                     
+     388/    2b46 : c8 30               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b48 :                     
+     390/    2b48 : =$50                i	set	i+10
+     382/    2b48 :                     
+     383/    2b48 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b48 : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b48 : =78.03502755..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b48 : =-81.1538377..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b48 :                     
+     388/    2b48 : ce 2e               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b4a :                     
+     390/    2b4a : =$5a                i	set	i+10
+     382/    2b4a :                     
+     383/    2b4a : =7.776507174..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b4a : =114.3              y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b4a : =80.82230508..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b4a : =-80.8223050..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b4a :                     
+     388/    2b4a : d0 2f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b4c :                     
+     390/    2b4c : =$64                i	set	i+10
+     382/    2b4c :                     
+     383/    2b4c : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b4c : =112.5635261..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b4c : =81.15383777..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b4c : =-78.0350275..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b4c :                     
+     388/    2b4c : d1 31               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b4e :                     
+     390/    2b4e : =$6e                i	set	i+10
+     382/    2b4e :                     
+     383/    2b4e : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b4e : =107.4068665..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b4e : =79.01955217..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b4e : =-72.8766952..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b4e :                     
+     388/    2b4e : cf 37               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b50 :                     
+     390/    2b50 : =$78                i	set	i+10
+     382/    2b50 :                     
+     383/    2b50 : =-6.34999999..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b50 : =98.98670365..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b50 : =74.48429746..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b50 : =-65.5040413..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b50 :                     
+     388/    2b50 : ca 3e               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b52 :                     
+     390/    2b52 : =$82                i	set	i+10
+     382/    2b52 :                     
+     383/    2b52 : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b52 : =87.55887984..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b52 : =67.68587506..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b52 : =-56.1410803..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b52 :                     
+     388/    2b52 : c3 47               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b54 :                     
+     390/    2b54 : =$8c                i	set	i+10
+     382/    2b54 :                     
+     383/    2b54 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b54 : =73.47062378..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b54 : =58.83085159..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b54 : =-45.0723009..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b54 :                     
+     388/    2b54 : ba 52               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b56 :                     
+     390/    2b56 : =$96                i	set	i+10
+     382/    2b56 :                     
+     383/    2b56 : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b56 : =57.14999999..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b56 : =48.18828247..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b56 : =-32.6340226..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b56 :                     
+     388/    2b56 : b0 5f               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b58 :                     
+     390/    2b58 : =$a0                i	set	i+10
+     382/    2b58 :                     
+     383/    2b58 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b58 : =39.09290238..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b58 : =36.08153678..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b58 : =-19.2041759..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b58 :                     
+     388/    2b58 : a4 6c               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b5a :                     
+     390/    2b5a : =$aa                i	set	i+10
+     382/    2b5a :                     
+     383/    2b5a : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b5a : =19.84798670..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b5a : =22.87847184..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b5a : =-5.19082014..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b5a :                     
+     388/    2b5a : 96 7a               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b5c :                     
+     390/    2b5c : =$b4                i	set	i+10
+     382/    2b5c :                     
+     383/    2b5c : =-12.7              x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b5c : =1.399771291..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b5c : =8.980256121..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b5c : =8.980256121..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b5c :                     
+     388/    2b5c : 88 88               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b5e :                     
+     390/    2b5e : =$be                i	set	i+10
+     382/    2b5e :                     
+     383/    2b5e : =-12.5070584..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b5e : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b5e : =-5.19082014..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b5e : =22.87847184..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b5e :                     
+     388/    2b5e : 7a 96               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b60 :                     
+     390/    2b60 : =$c8                i	set	i+10
+     382/    2b60 :                     
+     383/    2b60 : =-11.9340962..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b60 : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b60 : =-19.2041759..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b60 : =36.08153678..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b60 :                     
+     388/    2b60 : 6c a4               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b62 :                     
+     390/    2b62 : =$d2                i	set	i+10
+     382/    2b62 :                     
+     383/    2b62 : =-10.9985226..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b62 : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b62 : =-32.6340226..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b62 : =48.18828247..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b62 :                     
+     388/    2b62 : 5f b0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b64 :                     
+     390/    2b64 : =$dc                i	set	i+10
+     382/    2b64 :                     
+     383/    2b64 : =-9.72876442..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b64 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b64 : =-45.0723009..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b64 : =58.83085159..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b64 :                     
+     388/    2b64 : 52 ba               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b66 :                     
+     390/    2b66 : =$e6                i	set	i+10
+     382/    2b66 :                     
+     383/    2b66 : =-8.16340264..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b66 : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b66 : =-56.1410803..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b66 : =67.68587506..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b66 :                     
+     388/    2b66 : 47 c3               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b68 :                     
+     390/    2b68 : =$f0                i	set	i+10
+     382/    2b68 :                     
+     383/    2b68 : =-6.35000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b68 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b68 : =-65.5040413..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b68 : =74.48429746..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b68 :                     
+     388/    2b68 : 3e ca               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b6a :                     
+     390/    2b6a : =$fa                i	set	i+10
+     382/    2b6a :                     
+     383/    2b6a : =-4.34365582..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b6a : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b6a : =-72.8766952..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b6a : =79.01955217..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b6a :                     
+     388/    2b6a : 37 cf               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b6c :                     
+     390/    2b6c : =$104               i	set	i+10
+     382/    2b6c :                     
+     383/    2b6c : =-2.20533185..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b6c : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b6c : =-78.0350275..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b6c : =81.15383777..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b6c :                     
+     388/    2b6c : 31 d1               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b6e :                     
+     390/    2b6e : =$10e               i	set	i+10
+     382/    2b6e :                     
+     383/    2b6e : =-2.33295215..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b6e : =-114.3             y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b6e : =-80.8223050..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b6e : =80.82230508..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b6e :                     
+     388/    2b6e : 2f d0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b70 :                     
+     390/    2b70 : =$118               i	set	i+10
+     382/    2b70 :                     
+     383/    2b70 : =2.205331856..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b70 : =-112.563526..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b70 : =-81.1538377..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b70 : =78.03502755..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b70 :                     
+     388/    2b70 : 2e ce               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b72 :                     
+     390/    2b72 : =$122               i	set	i+10
+     382/    2b72 :                     
+     383/    2b72 : =4.343655820..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b72 : =-107.406866..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b72 : =-79.0195521..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b72 : =72.87669520..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b72 :                     
+     388/    2b72 : 30 c8               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b74 :                     
+     390/    2b74 : =$12c               i	set	i+10
+     382/    2b74 :                     
+     383/    2b74 : =6.350000000..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b74 : =-98.9867036..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b74 : =-74.4842974..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b74 : =65.50404133..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b74 :                     
+     388/    2b74 : 35 c1               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b76 :                     
+     390/    2b76 : =$136               i	set	i+10
+     382/    2b76 :                     
+     383/    2b76 : =8.163402643..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b76 : =-87.5588798..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b76 : =-67.6858750..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b76 : =56.14108032..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b76 :                     
+     388/    2b76 : 3c b8               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b78 :                     
+     390/    2b78 : =$140               i	set	i+10
+     382/    2b78 :                     
+     383/    2b78 : =9.728764427..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b78 : =-73.4706237..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b78 : =-58.8308515..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b78 : =45.07230099..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b78 :                     
+     388/    2b78 : 45 ad               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b7a :                     
+     390/    2b7a : =$14a               i	set	i+10
+     382/    2b7a :                     
+     383/    2b7a : =10.99852262..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b7a : =-57.1500000..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b7a : =-48.1882824..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b7a : =32.63402261..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b7a :                     
+     388/    2b7a : 4f a0               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b7c :                     
+     390/    2b7c : =$154               i	set	i+10
+     382/    2b7c :                     
+     383/    2b7c : =11.93409628..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b7c : =-39.0929023..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b7c : =-36.0815367..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b7c : =19.20417596..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b7c :                     
+     388/    2b7c : 5b 93               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b7e :                     
+     390/    2b7e : =$15e               i	set	i+10
+     382/    2b7e :                     
+     383/    2b7e : =12.50705846..      x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b7e : =-19.8479867..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b7e : =-22.8784718..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b7e : =5.190820141..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b7e :                     
+     388/    2b7e : 69 85               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b80 :                     
+     390/    2b80 : =$168               i	set	i+10
+     382/    2b80 :                     
+     383/    2b80 : =12.7               x2	set	rx * cos (i * r9)		; calc x on ellipse
+     384/    2b80 : =-2.79954258..      y2	set	ry * sin (i * r9)		; calc y on ellipse
+     385/    2b80 : =-8.98025612..      x9	set	x2 * cos (t * r9) + y2 * sin (t * r9)	; rotate x2,y2 by t
+     386/    2b80 : =-8.98025612..      y9	set	y2 * cos (t * r9) - x2 * sin (t * r9)	; to give x9,y9
+     387/    2b80 :                     
+     388/    2b80 : 77 77               	fcb	int(cx + x9), int(cy + y9)
+     389/    2b82 :                     
+     390/    2b82 : =$172               i	set	i+10
+     392/    2b82 : 00 01               	fcb	0,1			; x=0,y=1 in the stream indicates pen-up
+     393/    2b84 :                     
+     394/    2b84 : =$b4                t	set	t+45
+     396/    2b84 :                     
+     397/    2b84 : 00 00               	fcb	0,0			; x=0,y=0 in the stream indicates done
+     398/    2b86 :                     
+ AS V1.41r8 - source file plot.asm - page 2 - 1/31/2011 20:02:23
+
+
+  symbol table (* = unused):
+  ------------------------
+
+*ARCHITECTURE :         i386-macosx - |  BACKSPACE :                   282d C |
+*BIGENDIAN :                      0 - |  BITBUF :                      2976 C |
+ BITCNT :                      2975 C |  BITLP1 :                      2945 C |
+ BITLP2 :                      2959 C |  BITLP3 :                      2961 C |
+*BRANCHEXT :                      0 - | *CASESENSITIVE :                  0 - |
+ CONSTPI :        3.141592653589793 - |  CX :                            80 - |
+ CY :                            80 - | *DATE :                   1/31/2011 - |
+ DISPLAY_DONE :                2858 C |  DISPLAY_LP :                  284f C |
+*F :                              0 - | *FALSE :                          0 - |
+*FULLPMMU :                       1 - | *HAS64 :                          1 - |
+*HASFPU :                         0 - | *HASPMMU :                        0 - |
+ I :                            172 - | *INEXTMODE :                      0 - |
+*INLWORDMODE :                    0 - | *INMAXMODE :                      0 - |
+*INSRCMODE :                      0 - | *INSUPMODE :                      0 - |
+ LCDCTL :                      2400 - |  LCDDATA :                     2401 - |
+ LCDSENDCTL :                  285a C |  LCD_INIT :                    2834 C |
+ LCD_PUTCHAR :                 2841 C | *LCD_STRING :                  284e C |
+*LISTON :                         1 - | *MACEXP :                         1 - |
+*MAIN :                        2800 C |  MAINLOOP :                    2818 C |
+ MAXR :                          7f - |  MESSAGE :                     29bf C |
+*MOMCPU :                      6800 - | *MOMCPUNAME :                  6800 - |
+ OUTBYT :                      fe20 - | *PADDING :                        1 - |
+ PALEOFERROSAURUS_PLOT :       2a48 C |  PLOTTER_DOPLOT :              2899 C |
+ PLOTTER_DOPLOT_DONE :         28e0 C |  PLOTTER_DOPLOT_LP :           28a1 C |
+ PLOTTER_INIT :                2867 C |  PLOTTER_INIT_STRING :         2980 C |
+ PLOTTER_PENAWAY_STRING :      29ac C |  PLOTTER_PENDOWN :             2882 C |
+ PLOTTER_PENDOWN_STRING :      29b8 C |  PLOTTER_PENSTATE :            29bc C |
+ PLOTTER_PENUP :               2878 C |  PLOTTER_PENUP_STRING :        29b4 C |
+ PLOTTER_PLOT_ABSOLUTE :       2871 C |
+ PLOTTER_PLOT_ABSOLUTE_STRING : 29b1 C |
+ PLOTTER_PUTPENAWAY :          288f C |  PLOTTER_SAVEX :               29bd C |
+ PLOTTER_SPECIAL :             28d0 C |  PRINTA :                      28e1 C |
+ PRINTA_0 :                    28e4 C |  PRINTA_1 :                    28ed C |
+ PRINTA_2 :                    28f3 C |  PRINTA_3 :                    28fc C |
+ R9 :             0.017453292519943 - |  REDIS :                       fcbc - |
+*RELAXED :                        0 - |  RX :                          12.7 - |
+ RY :                         114.3 - |  SAVEA :                       2971 C |
+ SAVEB :                       2972 C |  SAVEX :                       2973 C |
+ SENDCLP :                     285b C |  SENDDLP :                     2842 C |
+ SEND_DONE :                   292b C |  SEND_LP :                     2922 C |
+*SEND_VIA_RTS :                292d C |  SERCSR :                      2000 - |
+ SERDATA :                     2001 - |  SER_GETCHAR :                 2916 C |
+ SER_INIT :                    2909 C |  SER_PUTCHAR :                 292d C |
+ SER_PUTCHAR_WAIT :            2936 C |  SER_PUTSTRING :               2921 C |
+ T :                             b4 - | *TIME :                    20:02:22 - |
+*TRUE :                           1 - |  TXBAUD :                      2580 - |
+*VERSION :                     1418 - |  X2 :                          12.7 - |
+ X9 :            -8.980256121069173 - |  Y2 :            -2.79954258289E-14 - |
+ Y9 :            -8.980256121069136 - |
+
+     95 symbols
+     28 unused symbols
+
+ AS V1.41r8 - source file plot.asm - page 3 - 1/31/2011 20:02:23
+
+
+  codepages:
+  ----------
+
+STANDARD (0 changed characters)
+
+
+0.03 seconds assembly time
+
+    398 lines source file
+   1802 lines incl. macro expansions
+      2 passes
+      0 errors
+      0 warnings
