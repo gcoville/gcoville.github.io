@@ -1,14 +1,18 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>
 gcoville's Retrochallenge 2011 Summer Challenge page
 </title>
 </head>
 <body>
-<h1> gcoville's Retrochallenge 2011 Summer Challenge project</h1>
+<h1>gcoville's Retrochallenge 2011 Summer Challenge project</h1>
 <h2>Description:</h2>
+<p>
 This page describes my efforts to restore a Commodore KIM-1 single board
 computer.
+</p>
 <p>
 This is part of the 
 <a href="https://web.archive.org/web/20111223104507/http://www.wickensonline.co.uk/retrochallenge-2011sc/index.html">
@@ -16,6 +20,7 @@ Retrochallenge 2011 Summer Challenge</a>
 that occured from July 1, 2011 to July 31, 2011.  The Retrochallenges are
 designed to get retrocomputing enthusiasts to actually spend time doing
 what they like to do: mess about with old computers.
+</p>
 <p>
 My project won first place.  My prize was a vintage Amstrad NC200 Notebook
 Computer with users manual and leatherette case.  It's quite nice and I look
@@ -38,11 +43,14 @@ amazing things with an Epson PX-8 laptop, including devising a way to send
 Twitter tweets from it.   His prizes were the books "Weird Computer Games"
 (Usborne computer books) by Jenny Tyler and C. Oxlade, 1984 and
 "The Pre-Computer Book" by F A Wilson, 1983. 
+</p>
 <p>
 There were lots of other cool projects and I suggest you check out the
 Retrochallenge page and take a look.
+</p>
 <p>
 Here are the highlights of my project during the month-long challenge:
+</p>
 <ul>
 <li><a href="#initialpic">Initial picture</a> of the KIM-1</li>
 <li><a href="#epromvideo">Video of basic EPROM circuit</a> and cpu test</li>
@@ -54,23 +62,29 @@ new ones</a></li>
 I continued working on this KIM-1 restoration after this retrochallenge ended.
 You can read about it in my <a href="/rc2012ww/">2012 Winter Warmup project</a>
 page.
+</p>
 <hr>
 <h2>Status:</h2>
+<p>
 <em>While the challenge was occurring, status updates were in reverse order
 with newer entries at the top.  However, now that the challenge is over, I
 have put them in chronological order so you can read from start to finish.</em>
+</p>
 <p>
 <em>Click on any picture to see a higher-resolution version.</em>
+</p>
 <hr>
 <h3>2011-06-30</h3>
 <p>
 I've sent in my entry.  My goal is:
+</p>
 <pre>
 I am going to fix up a very unhappy KIM-1 that I bought a few months ago.
 </pre>
 <p>
 The contest runs from July 1, 2011 through July 31, 2011.  I'll post more info
 on this project once the contest begins.
+</p>
 <hr>
 <h3>2011-07-01</h3>
 <p>
@@ -82,20 +96,24 @@ that I'm away when I'd wouldn't have been able to do anything except wait for
 the parts to arrive.  Another reason I chose to restore the KIM-1 is that two
 other contestants in the challenge are doing things with KIM-1 or the more
 modern MicroKim.  Maybe if I can actually get this thing running, they'll
-already have written cool software I can steal.&nbsp&nbsp&nbsp  :-)
+already have written cool software I can steal.&nbsp;&nbsp;&nbsp;  :-)
+</p>
 <p>
 Working KIM-1 boards seem to go for between $200 and $400 on ebay.  That's quite
 a lot of dough for a very simple computer.  However they're fairly rare, so
 that's the going rate.  I bought mine for far less than that, but it's going to
 need some work.  Here's a pic: <em>(click on the image for a much
 higher-resolution version)</em>
-<p>
-<a name="initialpic">
-<a href="unhappy_kim-1.jpg"><img src="unhappy_kim-1_sm.jpg"></a>
+</p>
+<p id="initialpic">
+<a href="unhappy_kim-1.jpg"><img src="unhappy_kim-1_sm.jpg" alt=""></a>
+</p>
 <p>
 It appears to be a Commodore MOS KIM-1 Rev D, SN #2177 (I think that's a SN)
+</p>
 <p>
 Here are some of the problems I see right away:
+</p>
 <ul>
 <li>One of the 6530 PIO/RAM/ROM chips is missing.  Uhoh.</li>
 <li>There's been some sort of abuse in the LED display area.
@@ -113,6 +131,7 @@ variable resistor.  I'm not sure what it is.</li>
 <p>
 The missing display and analog components don't worry me too much.  I'll be
 able to find suitable replacements easily enough.
+</p>
 <p>
 The missing 6530 is quite worrisome though.  This part has a mask ROM in it
 made especially for the KIM-1.  Any similar parts are most likely already in
@@ -121,9 +140,11 @@ they have different ROM contents.  I don't know which one is missing and whether
 the board can operate without it.  Initially, I'm not interested in getting
 the tape audio circuit or current loop interface working, so maybe there's
 enough firmware in the first ROM to operate the keyboard and displays.
+</p>
 <p>
 There's plenty of KIM-1 documentation on the Internet, so researching this
 shouldn't be too bad.
+</p>
 <hr>
 <h3>2011-07-03</h3>
 <p>
@@ -135,6 +156,7 @@ really stands out:
 Erik Van den Broeck's KIM-1 page</a>.
 He has converted the KIM-1 Hardware, Software, and Users manuals to HTML.
 They're beautiful, searchable, and quite understandable.  
+</p>
 <p>
 Another great site is Ruud Baltissen's
 <a href="http://www.6502.org/trainers/buildkim/buildkim.htm">
@@ -142,6 +164,7 @@ Build your own KIM-1</a>.  There's a schematic of the original KIM-1,
 a discussion of how to work around the impossible-to-find 6530 RRIOT parts
 using a 6532 RIOT and EPROM, and a schematic of a replica KIM-1 with the
 workaround.
+</p>
 <p>
 The part that I'm missing is the 6530-002 RRIOT (ROM-RAM-IO-Timer) chip.  This
 isn't going to be easy to find.  I have put out a call to the vintage computer
@@ -151,10 +174,12 @@ implement a workaround.  The problem with the 6532-based workaround in Ruud's
 page is that the 6532 has a vastly different pinout than the 6530.  Implementing
 that will require making a translation board.  That's not completely out of
 the question, but it is a bit cumbersome.
+</p>
 <p>
 Ebay does have some 6530 parts listed.  It is highly unlikely that these will
 be the exact part I need.  Most likely they'll have different ROM contents.
 I've been thinking that I could use a different 6530, disable the ROM function, and piggyback an EPROM part.
+</p>
 <p>
 Another wrinkle is that even with different ROM contents, the 6530 had 0, 1,
 or 2 chip select pins taken from two of the IO pins.  This was configurable
@@ -162,6 +187,7 @@ when the customer ordered the part from MOS when they provided the ROM
 content.  The 6530-002 I'm looking for has one chip select, and therefore is
 missing its PB6 line.  This is probably a common configuration, so I just might
 go ahead and buy a few old 6530s and see what I get.
+</p>
 <p>
 As for the 7-segment LEDs, I've been thinking I'll yank out what's there,
 put in low profile sockets, and put in all new displays.  However, when I
@@ -171,21 +197,27 @@ of the board holding the pins in.  Probably whoever attempted this previously
 on this board pulled the display out anyway, and that's why one of the traces
 on the top of the board is detached.  I'll have to figure out a better way to
 get these displays removed.
+</p>
 <p>
 I did straighten out the transistors.  Luckily, all the legs appear to be
 intact and not touching each other.
+</p>
 <p>
-<a href="righted_transistors.jpg"><img src="righted_transistors_sm.jpg"></a>
+<a href="righted_transistors.jpg"><img src="righted_transistors_sm.jpg" alt=""></a>
+</p>
 <p>
 The shadow from the flash in the picture above shows the trace that's hovering
 above the PCB.
+</p>
 <p>
 Finally, I've been looking at Briel Computers
 <a href="https://web.archive.org/web/20110822170108/http://www.brielcomputers.com/micro-KIM.html">Micro-KIM</a>.
 I'm secretly toying with putting the KIM-1 aside, spending the $150 for a
 fully-assembled Micro-KIM, and getting on with life.  :-)
+</p>
 <hr>
 <h3>2011-07-05</h3>
+<p>
 After more research, it looks like it's not so simple to find a different 6530,
 hope it has the desired chip selects, and defeat the ROM.  Another
 mask-programmable aspect of the 6530 is the actual addressing of the IO and
@@ -194,18 +226,23 @@ could have multiple 6530s in a system with minimal glue logic.  They'd just
 need to order their 6530s so that they didn't have any addresses in common
 and wire them essentially in parallel.  It's really a very cool idea.  It's
 just too bad they didn't make a one-time-programmable version of the part.
+</p>
 <p>
 So, the likelihood that going out and buying some random old 6530 and having it
 be useful is low.  Therefore, I'm now planning to make a 6530 module out of a
 6532, EPROM, and a little glue logic.  It will be an ugly little riser card.
 You've been warned.
+</p>
 <p>
 Today I got a bit sidetracked (and a bit poorer) buying NS 32k components.
 Perhaps that's for some future retrochallenge.
+</p>
 <p>
 And I've still got my eye on that Micro-KIM.
+</p>
 <hr>
 <h3>2011-07-19</h3>
+<p>
 I've been out of town and away from my toys for a while now.  Last week I was
 holed up in a hotel in Salt Lake City doing my regular job.  I am a full-time
 telecommuter.  Had I not told them, I don't think anyone I work with would have
@@ -213,16 +250,21 @@ known I wasn't at home.  This week has been vacation, but pretty much every
 day has a more grueling hike than the previous.  I live close to sea-level,
 and most of these hikes have been above 8000 ft (~2500 m).  Here's a shot of
 the GPS as we started a hike one day.
+</p>
 <p>
-<a href="gps_elevation.jpg"><img src="gps_elevation_sm.jpg"></a>
+<a href="gps_elevation.jpg"><img src="gps_elevation_sm.jpg" alt=""></a>
+</p>
 <p>
 (10416 ft = 3189 m)
+</p>
 <p>
 Note the white background in the picture.  That's snow.  Even though it's
 summertime here, we've been hiking through quite a bit of the stuff.
+</p>
 <p>
 Back to retrochallenge.  Even though I'm not at home where my project is,
 many of the tasks ahead are things I could theoretically do while I'm away.
+</p>
 <ul>
 <li>Study up on the 6530 that I'm replacing</li>
 <li>Study up on the 6532 that I'll be replacing it with</li>
@@ -233,11 +275,14 @@ many of the tasks ahead are things I could theoretically do while I'm away.
 If I can get these parts ordered and have them arrive at my home early next
 week, I'll have one last week to assemble the 6530-replacement board and
 install the new LEDs.
+</p>
 <p>
 The only problem is that at this altitude my brain isn't quite capable of
 focussing on the task.
+</p>
 <hr>
 <h3>2011-07-21</h3>
+<p>
 I ordered a bunch of parts for the project.  My hope is that they'll arrive
 on Monday.  I'll be getting two 6532s, seven 7-segment LED displays, and a bunch
 of IC sockets (for the RIOT, EPROM, as-yet unspecified glue logic, and the
@@ -245,17 +290,20 @@ LED displays on the KIM-1 itself).  Except for particularly expensive parts, I
 like to get an extra one of each item.  That way I don't have to worry too much
 if I fry something during soldering, break a pin plugging something in, or
 accidentally swap Vcc and Gnd.
+</p>
 <p>
 Some of the 40-pin sockets are wire-wrap sockets.  Even though the legs will
 be soldered to the home-brew daughter board, the long legs will extend down
 to the main KIM-1 board.  There are more professional ways of doing this, but
 I've used wire-wrap sockets in the past for this and it worked well.
+</p>
 <p>
 I also remembered to order two edge connectors that will fit the KIM-1.
 That's the proper way to power the board, plus there's a line called DECEN
 that needs to be connected to ground or the chip selects for the peripherals
 on the board won't work right.  (The purpose of the signal is that if you add
 external circuitry, you can fine-tune the KIM-1's onboard address decoding.)
+</p>
 <p>
 I've also been reading up on the 6530 RRIOT and the 6532 RIOT.  One of the
 projects to build a KIM-1-like computer with 6532s, large SRAM and standard
@@ -264,12 +312,15 @@ context of the overall address space.  My project will be using the existing
 chip selects and decoding for the non-existent 6530, so my glue logic has to
 do everything relative to how the KIM-1 sees the single 6530-002 part.  It's
 a subtle difference.  I haven't worked out the details yet.
+</p>
 <p>
 My current plan is to replace the LED displays first, then rig up a protoboard
 to the 6530-002's socket so I can try out my replacement circuit before
 committing it to a soldered circuit board.
+</p>
 <hr>
 <h3>2011-07-26</h3>
+<p>
 The parts arrived.  I ordered from
 <a href="http://www.jameco.com/">Jameco Electronics</a>
 in Belmont, CA because they had the 6532s.  Actually, the parts shipped Friday
@@ -277,6 +328,7 @@ and arrived Saturday, before I even got home from vacation.  It really was a
 blast from the past to order from them because I used to buy the exact same
 kinds of stuff (sockets, leds, chips, etc.) from them 25 years ago when I was
 in college.
+</p>
 <p>
 Change in plans, again.  I was thinking why start out trying to recreate the
 6530 on a daughter card?  I should really test the existing parts on the KIM-1
@@ -292,20 +344,26 @@ it into the socket that connects to the keyboard and LEDs.  The 64 bytes of
 RAM in it, IO, and timer will not be at the addresses where the original
 monitor firmware expects them, so I'll have to modify the firmware a bit in
 my custom KIM EPROM.
+</p>
 <p>
 I should probably start out with a simple program that just tests the 6502
 to see if it's at least operating, then test the SRAM, then test the 6530-003
 sitting in the 6530-002's socket, then test the keypad and LED displays.
+</p>
 <p>
 This is a lot of EPROM burning and erasing, so I figured it was time to dust
 off my old EPROM programmer.  It's a B&C Microsystems 1409C that I built
 back in 1986.  Here's a picture of one I pulled off the web:
+</p>
 <p>
-<img src="bc_microsystems_1409c_web.jpg">
+<img src="bc_microsystems_1409c_web.jpg" alt="">
+</p>
 <p>
 Unfortunately, this is what mine looks like:
+</p>
 <p>
-<a href="bc_microsystems_1409c_eprom_burner.jpg"><img src="bc_microsystems_1409c_eprom_burner_sm.jpg"></a>
+<a href="bc_microsystems_1409c_eprom_burner.jpg"><img src="bc_microsystems_1409c_eprom_burner_sm.jpg" alt=""></a>
+</p>
 <p>
 The builtin eprom eraser (lower left) is removed to make room for a custom
 hack board I added to the programmer in 1988 (according to my notes).  I added
@@ -314,24 +372,31 @@ a 6116 RAM by piggybacking off the EPROM socket inside the programmer itself
 why I did this hack, but I think I had a grandiose plan to rewrite the 8085
 firmware in the programmer and add the capability to program more devices.
 That project is unfinished, but at least the programmer is in an operable state.
+</p>
 <p>
 Before moving on, note the wirewrap socket jammed into the KIM-1's 6530-002
 socket.  That's probably how my daughter card will ride on the KIM-1
 eventually.  Plus I've got an edge connector attached to the upper expansion
 connector.
+</p>
 <p>
 Here's a better view of the hack board inside the EPROM programmer:
+</p>
 <p>
-<a href="bc_microsystems_1409c_hacked.jpg"><img src="bc_microsystems_1409c_hacked_sm.jpg"></a>
+<a href="bc_microsystems_1409c_hacked.jpg"><img src="bc_microsystems_1409c_hacked_sm.jpg" alt=""></a>
+</p>
 <p>
 From left to right, the EPROM holding firmware which I think I downloaded from
 B&C in the early '90s, the empty wirewrap socket that connects to the lower
 firmware socket, and the 6116 SRAM.
+</p>
 <p>
 Anyway, it appears to be able to read 2716's I've got hanging around, some of
 which are already erased.
+</p>
 <p>
 Here's a picture of my homebrew EPROM eraser, made from raw materials:
+</p>
 <ul>
 <li>An EPROM eraser board removed from a B&C Microsystems EPROM programmer</li>
 <li>A random cardboard shipping box that will seal nicely to keep the UV inside</li>
@@ -339,26 +404,36 @@ Here's a picture of my homebrew EPROM eraser, made from raw materials:
 <li>Power cord cut off from some dead electronic thing I pulled from my to-take-to-the-ewaste-site pile</li>
 <li>Wire nuts</li>
 </ul>
-<a href="homebrew_eprom_eraser.jpg"><img src="homebrew_eprom_eraser_sm.jpg"></a>
+<p>
+<a href="homebrew_eprom_eraser.jpg"><img src="homebrew_eprom_eraser_sm.jpg" alt=""></a>
+</p>
 <p>
 There's also an EPROM there right under the bulb ready to be erased.
+</p>
 <p>
 Tomorrow, I hope to attach an EPROM to the KIM-1 and write some programs to test
 things out.
+</p>
 <hr>
 <h3>2011-07-27</h3>
+<p>
 I cracked out the Heathkit ET-3300 breadboard and power supply.  I'll use
 this for my prototyping with the KIM-1.  I also wired up the KIM-1's
 Application Connector.  That was easy because I needed only 3 wires.  I've
 started the Expansion Connection, but that one will need about 30 wires.
+</p>
 <p>
-<a href="et-3300_and_kim-1.jpg"><img src="et-3300_and_kim-1_sm.jpg"></a>
+<a href="et-3300_and_kim-1.jpg"><img src="et-3300_and_kim-1_sm.jpg" alt=""></a>
+</p>
 <p>
 The circuit to add the EPROM will be very simple.  I hope to have it wired up
 tomorrow.
+</p>
 <hr>
 <h3>2011-07-27 supplemental</h3>
+<p>
 Someone was having difficulty converting -5 to hexadecimal in a signed 8-bit context.  Here's how to do it:
+</p>
 <pre>
 Decimal:	   5
 Binary:		   0000 0101
@@ -368,13 +443,16 @@ Hexadecimal:	   F    B
 </pre>
 <hr>
 <h3>2011-07-28</h3>
+<p>
 I've got the breadboard and 2716 EPROM connected to the KIM-1.  There's a simple
 program in the EPROM which tests that the CPU is functioning.
-<p>
-<a name="epromvideo">
-<iframe title="YouTube video player" class="youtube-player" type="text/html" width="480" height="390" src="https://www.youtube.com/embed/fsyWkJtCcnk" frameborder="0" allowFullScreen></iframe>
+</p>
+<p id="epromvideo">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/fsyWkJtCcnk" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 <p>
 And here's the listing for the cpu test eprom:
+</p>
 <pre>
  AS V1.42 Beta [Bld 79] - source file cputest.asm - page 1 - 7/28/2011 20:23:58
 
@@ -442,8 +520,10 @@ And here's the listing for the cpu test eprom:
 </pre>
 <hr>
 <h3>2011-07-29</h3>
+<p>
 Today I've been writing tons of little programs to test things on the KIM-1
 board.  Results have been somewhat troubling.
+</p>
 <p>
 However, I'll start with a success.  I took the original KIM-1 source
 listing, converted it to syntax that my assembler, "asl", understands, and
@@ -454,12 +534,14 @@ addresses, such as the ROM itself residing at f800 and the 6530-003 (which
 I do have) sitting in the socket for the 6530-002 (which I don't have).
 I actually did try that experiment and it did not work.  I then went back
 to the little tests to see what's working on the board.
+</p>
 <p>
 I got somewhat hung up on testing the 1K of RAM on the KIM-1 board.  My first
 ramtest program indicated there was a failure somewhere in the RAM.  Remember,
 I still don't have a whole lot of output at my disposal, so I'm still
 indicating various bits of status by pinging select lines on a 3-to-8 decoder
 and looking at them with a logic probe.
+</p>
 <p>
 By modifying the ramtest program, I found that page 0 (0000-00ff) and page 1
 (0100-01ff) test fine, but pages 2 and 3 do not.  This is somewhat good news
@@ -473,6 +555,7 @@ So if there's a fault in one of the ram chips, that chip actually serves
 one bit of all the addresses in the first 1k.  Faults might show up in page
 0 and page 1 any time now.  It took several versions of the ramtest program
 to narrow this down to the page granularity.
+</p>
 <p>
 I also attempted to test the 6530-003 part that I have sitting in the U3
 socket.  (I'm missing -002.  I got confused in yesterday's video about which
@@ -481,17 +564,22 @@ testing the 64 bytes of RAM, and that gives a failure.  Ugh.  Either the
 part is bad, or I've gotten confused on what addresses it should be at.
 The test didn't proceed to the ROM test or IO test, and I've run out of
 time for today.
+</p>
 <p>
 Here's a picture of my work area.
+</p>
 <p>
-<a href="lots_of_eproms.jpg"><img src="lots_of_eproms_sm.jpg"></a>
+<a href="lots_of_eproms.jpg"><img src="lots_of_eproms_sm.jpg" alt=""></a>
+</p>
 <p>
 Note the large number of EPROMS that have been burned.  It's a good thing
 that I've been hoarding 2716's for the past 30 years.  Also note that I have
 a ZIF (zero-insertion-force) socket on the breadboard.  It's been really nice
 having that there while I'm swapping all these EPROMs in and out.
+</p>
 <hr>
 <h3>2011-07-30</h3>
+<p>
 There is so much that doesn't seem to work on the board, I thought that I might
 have power problems.  I checked some voltages on the board and they did seem
 a bit low at 4.75 volts.  I'm now using a beefier power supply (from an old
@@ -499,6 +587,7 @@ AT-style computer) and the voltages are a bit better.  Unfortunately, none
 of the problems magically disappeared as I was hoping.  I'll keep the bigger
 power supply in place until I get all the problems figured out, then go back
 to the lesser supply and see if things still work.
+</p>
 <p>
 I think the one 6530 that I do have isn't any good.  No amount of prodding
 has gotten any signs of life out of it.  I'm not quite ready to give up on
@@ -506,6 +595,7 @@ it yet, but I have put it aside.  That's a 6530-003, which doesn't do much
 for the actual operation of an unexpanded KIM-1, except hold half the ROM
 monitor.  It's the 6530-002 in location U2 (the lower one in the pictures)
 which I need replicate.
+</p>
 <p>
 Today I wired up a 6532 RIOT (ie. no on-chip ROM) into the circuit and put it
 at address 2000h.  I've got its IO lines going straight to the appropriate
@@ -515,22 +605,29 @@ with the new addresses of the IO ports, onchip RAM, and location of my
 EPROM to see if I can get the KIM-1 display and keypad functioning.  I
 still haven't fixed all the LED displays, but I figured I should be able
 to at least see the ones there that are working show something.
+</p>
 <p>
-<a href="6532.jpg"><img src="6532_sm.jpg"></a>
+<a href="6532.jpg"><img src="6532_sm.jpg" alt=""></a>
+</p>
 <p>
 It partially works, I can see the initial display of a "0", but it's not
 responding to my keypresses.  I suspect that the SRAM at pages 0 and 1 is
 not healthy enough to actually support the ROM monitor.
+</p>
 <p>
 Tomorrow I'll wire up some replacement RAM at low memory and evaluate where
 to go from there.
+</p>
 <hr>
 <h3>2011-07-31</h3>
+<p>
 This is the last day of the retrochallenge and it sure has been a busy day
 here.  But at the end ... WE HAVE A WORKING KIM-1!
+</p>
 <p>
 I started off the day by adding a static RAM part to the proto board.  When
 that was put in place at address 0, the KIM monitor started behaving.
+</p>
 <p>
 Then I started replacing the displays.  I used 14-pin IC sockets, because I
 wasn't sure if I'd ordered the right parts, and I didn't want to have to do
@@ -538,9 +635,10 @@ any more desoldering than necessary.  It turns out this was a good decision,
 as I did in fact order the wrong displays.  The pinout was all wrong.  I didn't
 know they came like that, but I do now.  After an emergency run to Fry's, I
 came home with the right parts.  Here's a picure of the new displays in action.
-<p>
-<a name="newdisplays">
-<a href="pretty_new_displays.jpg"><img src="pretty_new_displays_sm.jpg"></a>
+</p>
+<p id="newdisplays">
+<a href="pretty_new_displays.jpg"><img src="pretty_new_displays_sm.jpg" alt=""></a>
+</p>
 <p>
 I spent quite a bit of time trying to figure out what was wrong with the
 KIM-1's onboard RAM.  I found a memory test program in
@@ -554,17 +652,21 @@ is bit#1, represented by the 2102 at location U11.  I do plan to replace it,
 but I ran out of time.  (As it happens, I have a stash of 2102s that I've been
 carrying around since I was about 11 years old.  They were part of a Signetics
 2650 project that didn't go anywhere.)
+</p>
 <p>
 However, the KIM-1 is quite functional for doing KIM-1-like activities.  I
 whipped up a little program that counts up and shows the value on the LED
 displays.
+</p>
 <p>
 Here's a video showing today's activities plus the program counting up.
-<p>
-<a name="finalvideo">
-<iframe title="YouTube video player" class="youtube-player" type="text/html" width="480" height="390" src="https://www.youtube.com/embed/kLlQTMtYD1k" frameborder="0" allowFullScreen></iframe>
+</p>
+<p id="finalvideo">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kLlQTMtYD1k" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 <p>
 And here's the counting program:
+</p>
 <pre>
  AS V1.42 Beta [Bld 79] - source file countup.asm - page 1 - 7/31/2011 20:21:22
 
@@ -592,10 +694,12 @@ And here's the counting program:
       21/      15 : 4c 08 00            	jmp	loop
       22/      18 :                     
 </pre>
+<p>
 Note that the scands subroutine's address is different than what the regular
 KIM-1 (or MicroKIM) user would expect.  This is due to the fact that the
 my KIM-1 ROM has been reassembled to run at a different location than the
 stock KIM-1 ROM.
+</p>
 <p>
 And that's it for my 2011 RetroChallenge entry.  I'm quite proud to have this
 project to the point where I have a working KIM-1 given the setbacks: a
@@ -603,11 +707,16 @@ missing RRIOT, a faulty RRIOT, faulty RAM, and the abuse in the LED displays
 area.  I think I'll still go ahead and make the daughter card so that this
 KIM-1 can operate with the stock KIM-1 firmware and without the assistance
 of the protoboard.  But for now, I've got enough KIM-1 to play around with.
+</p>
 <p>
 Have a good summer, folks!  See you next year.
+</p>
 <p>
 Gilbert
+</p>
 <hr>
+<p>
 <em>Gilbert Coville</em>
+</p>
 </body>
 </html>

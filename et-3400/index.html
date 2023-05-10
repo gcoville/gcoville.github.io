@@ -1,17 +1,20 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>
 Heathkit ET-3400 page
 </title>
 </head>
 <body>
-<h1>Heathkit ET-3400 projects<h1>
+<h1>Heathkit ET-3400 projects</h1>
 <h2>Description:</h2>
 <p>
 This page lists various projects and activities related to my experiments with
 my Heathkit ET-3400 and ET-3400A microprocessor trainers.  If you're interested
 in the ET-3400, be sure to look at my first link below, as there are plenty of
 pictures and a couple videos of the ET-3400 and ET-3400A in action.
+</p>
 <ul>
 <li>My <a href="/rc2011ww">Retrochallenge 2011 Winter Warmup entry</a>.  All devoted to the ET-3400 and ET-3400A.</li>
 <li><a href="#1hzmystery">1Hz mystery solved</a></li>
@@ -22,9 +25,10 @@ pictures and a couple videos of the ET-3400 and ET-3400A in action.
 <li><a href="#retroschematics">Schematics</a> for the additional circuits in the retrochallenge</li>
 </ul>
 <hr>
-<a name="1hzmystery"></a>
-<h4>1Hz mystery solved</h4>
+<h4 id="1hzmystery">1Hz mystery solved</h4>
+<p>
 <i>2011-02-03</i>
+</p>
 <p>
 In the retrochallenge, I fixed the 1Hz signal for the ET-3400.  It needed a new
 quad-comparator chip.  Originally, it was a LM2901N, but I replaced it with a
@@ -32,6 +36,7 @@ LM339.  The typical way to look at the output of a signal is to connect a wire
 to one of the LED inputs.  When I did that, the period and duty cycle seemed
 way off, 26 per minute and on for about 80%, off about 20%.  I noticed that
 the same behavior on the ET-3400A, so I just ignored it for later.
+</p>
 <p>
 It turns out the the issue here is a measurement problem.  The 1Hz signal uses
 RC-based timing on the quad comparator.  The inputs to the LED have a 8200 ohm
@@ -41,21 +46,25 @@ as a 7404 inverter, then look at the output, it's much closer to 1Hz.  I did
 this and the frequency seems to be about 80 in 60 seconds, and very close to
 50% duty cycle.  It's good for a nice slow pulse, but it's not good for
 anything close to 1.0000 Hz.
+</p>
 <hr>
-<a name="newassembler"></a>
-<h4>New version of the asl assembler</h4>
+<h4 id="newassembler">New version of the asl assembler</h4>
+<p>
 <i>2011-02-03</i>
+</p>
 <p>
 In the retrochallenge, I found the asl assembler and compiled it on my Mac.
 Overall, I'm extremely happy with this assembler.  It made my life much
 easier while messing around with the ET-3400/ET-3400A.  It does have some
 quirks, though.
+</p>
 <p>
 The asl assembler is a C port of a Pascal program that the author did in the
 mid '90s, I think.  It's all open source, however the code is a mess.
 Perhaps if I look at it for a while longer I'll get used to it.  But because
 it's a translation from an old Pascal program, there's stuff in there like
 this:
+</p>
 <pre>
 #define BEGIN {
 #define END }
@@ -71,17 +80,20 @@ this:
 
 #define Nil NULL
 </pre>
-
+<p>
 The code is littered with BEGIN and END, pascal style.  It's no longer
 Pascal, and it's not C.  Ugh.  But it works quite well.
+</p>
 <p>
 I still haven't gotten the listing control to work.  There's a command-line
 switch to enable/disable various portions of the listing: turn on/off the
 symbol section, line numbers, etc.  So far, nothing I've tried has had any
 effect on the listing format.
+</p>
 <p>
 For my final demo I used some of the macro looping features, and that's
 when I ran into a real bug.  Look at this segment:
+</p>
 <pre>
  AS V1.41r8 - source file macro.asm - page 1 - 2/3/2011 18:00:51
 
@@ -89,7 +101,7 @@ when I ran into a real bug.  Look at this segment:
        1/       0 :                     	outradix	10
        2/       0 :                     
        3/       0 : =$0                 t	set	0			; for t=0 to 135 step 45
-       4/       0 :                     	while	(t <= 135)
+       4/       0 :                     	while	(t &lt;= 135)
        5/       0 :                     
        6/       0 :                     	fcb	"\{t}"
        7/       0 :                     	
@@ -117,9 +129,11 @@ when I ran into a real bug.  Look at this segment:
        8/       b : =$e1                t	set	t+45
       10/       b :                     
 </pre>
+<p>
 Excuse me?  Is that a "180" (31 38 30) there in my loop that was supposed
 to end at 135?  It was this bug that caused me to use the "rept" macros
 instead of the "while" macros in the final demo in the retrochallenge.
+</p>
 <p>
 Early on in the retrochallenge when I found the asl assembler, there was
 the "last stable" version and the current "beta" version.  I chose the last
@@ -131,6 +145,7 @@ and it turns out this software is still being actively developed.  Last
 version was in December, 2010.  He's abandoned the versioning scheme he had
 on the web page and just goes by beta build number.  Anyway, now that I'm
 running the new version, you can see an improvement.
+</p>
 <pre>
  AS V1.42 Beta [Bld 79] - source file macro.asm - page 1 - 2/3/2011 21:16:09
 
@@ -138,7 +153,7 @@ running the new version, you can see an improvement.
        1/       0 :                     	outradix	10
        2/       0 :                     
        3/       0 : =$0                 t	set	0			; for t=0 to 135 step 45
-       4/       0 :                     	while	(t <= 135)
+       4/       0 :                     	while	(t &lt;= 135)
        5/       0 :                     
        6/       0 :                     	fcb	"\{t}"
        7/       0 :                     	
@@ -163,57 +178,70 @@ running the new version, you can see an improvement.
        5/       8 :                     
       10/       8 :                     
 </pre>
+<p>
 The loop stops at "135" (31 33 35) as it should.  I still haven't gotten the listing
 control to behave as I expect, but I'm sure it's still just operator error.
+</p>
 <hr>
-<a name="lcdmonitor"></a>
-<h4>Monitor using the LCD</h4>
+<h4 id="lcdmonitor">Monitor using the LCD</h4>
+<p>
 <i>2011-02-02</i>
+</p>
 <p>
 I've been thinking it would be cool do have the ROM monitor operate on the LCD
 instead of the LEDs.  It could have the "CPU UP" and all that right on the
 LCD.  I've started by getting the code for the ET-3400 Monitor Rom.  The
 et-3400 yahoo group files section has it available.  With a few simple
 modifications, it builds in the asl assembler.
+</p>
 <p>
 The main issue is how to get to the "reset" entry point in my monitor?  It's
 too early to remove the real rom monitor, so the ROM is still there and always
 directs the Reset vector to $FC00.  There's nothing I can do about it.  However,
 I can use the NMI signal as a sort of Reset to get into my own Monitor.
+</p>
 <p>
 So I rebuilt the monitor with a new origin so that it runs in the additional
 RAM I added during the retrochallenge.  I changed the "CPU UP" to be "cPU UP",
 put a jump to reset vector into the place where the real rom monitor vectors
 the NMI to, and hit the NMI button.  I got my "cPU UP", and everything else
 worked just fine.
+</p>
 <p>
 There is a problem, I've got an non-bounce-protected button going into the
 NMI vector.  I'm pretty sure it's sending multiple NMIs to the CPU.  This
 is not desirable.  I'll have to set up a debouncer on that button.
+</p>
 <p>
 Next step is to gut the output routines that go to the LED and stick in some
 LCD ones.
+</p>
 <hr>
-<a name="nmidebounce"></a>
-<h4>NMI Debounce</h4>
+<h4 id="nmidebounce">NMI Debounce</h4>
+<p>
 <i>2011-02-03</i>
+</p>
 <p>
 I've got a button going into the NMI line.  It's pulled high, and the button
 grounds it.  Well, this scheme sends multiple falling-edges into the NMI
 line.  This is causing more than one interrupt.  I set up a simple counter to
 see how many I was getting, and it was somewhere about 20 interrupts per
 keypress.
+</p>
 <p>
 There are several debouncing methods.  Since I don't have "software" as an
 option here, I chose to use a 555 timer to send a one-shot pulse when I
 hit the NMI button.  As long as I have released the nmi button before the
 pulse is done, I don't get any bounces sent on the way up.
+</p>
 <p>
 I'll post a schematic when I get a good method.
+</p>
 <hr>
-<a name="twooldboards"></a>
-<h4>Ebay purchase: two old boards</h4>
+<h4 id="twooldboards">Ebay purchase: two old boards</h4>
+<p>
 <i>2011-02-03</i>
+</p>
 <p>
 I bought two "for parts" ET-3400A boards off ebay.  They do not have the
 blue-plastic cases.  From what I can tell of the pictures, they both have
@@ -221,15 +249,19 @@ all the keycaps, the RAM, CPUs, two 7-segment LEDs each.  Neither one
 has the ROM.  There's only one power transformer.  I didn't pay much for
 the lot.  It will be interesting to see what arrives and whether there's
 any hope these can ever operate again in some form.
+</p>
 <p>
 <i>2011-02-07</i>
+</p>
 <p>
 The boards arrived today.  They don't seem to be in too bad shape.  Clearly,
 they've been raided for parts.  I may be able to get them working.  The ROMs
 are missing, so they need to be adapted for EPROM use which requires a
 modification because the Motorola ROM pinout is not compatible with your
 average 2716.
-<p>One has an LED missing, and the other has green LEDs where I usually
+</p>
+<p>
+One has an LED missing, and the other has green LEDs where I usually
 expect red ones.  Green power LED, too.  Plus a funny "* cancel" label
 on the reset key.  Both have had their 7-segment LEDs raided.  And both
 look like their dipswitches were actuated by pencil-point.  Perhaps these
@@ -240,6 +272,7 @@ still there.  Most of the other chips are present.  Interesting is that
 the CPUs are 6808's, whereas my reference ET-3400A has a 6802.  The 6808
 has a little bit of built-in ram which is disabled by the ET-3400A, making
 it behave just like a 6802.
+</p>
 <p>
 I figure a good way to get started with these is to start grabbing the
 components individually and testing them out in my working ET-3400A.  I'll
@@ -248,40 +281,52 @@ in the retrochallenge.  I'll check out basic power connections, then I guess
 the acid test is to populate them with all known working parts and see how
 it goes.  Then decide what to do from there.  I'll need a good mounting
 solution at some point.
+</p>
 <p>
 Another interesting thing is that to examine these boards, it's easier for
 me to look at the hi-resolution photos than to actually go over to the boards
 and stare at them.  The lighting with the camera flash is better than the
 lighting in this room in general.  (Oh, now I see one of them is missing diode
 D17 adjacent to the CPU.)
+</p>
 <p>
-<a href="et-3400a_parts_red.jpg"><img src="et-3400a_parts_red_sm.jpg"></a>
+<a href="et-3400a_parts_red.jpg"><img src="et-3400a_parts_red_sm.jpg" alt=""></a>
+</p>
 <p>
-<a href="et-3400a_parts_green.jpg"><img src="et-3400a_parts_green_sm.jpg"></a>
+<a href="et-3400a_parts_green.jpg"><img src="et-3400a_parts_green_sm.jpg" alt=""></a>
+</p>
 <p>
 <i>2011-02-08</i>
+</p>
+<p>
 I was looking in the "Motorola 8-bit Microprocessor and Peripheral Data" book,
 and I was mistaken, the 6802 has the built-in RAM and the 6808 does not have
 it.
+</p>
 <p>
 Another thing I noticed is the 6802/6808 does not have the tri-state control
 input.  I wonder how you're supposed to do DMA with these parts?  The
 ET-3400A does have a TSC input, but it doesn't seem to do anything to the
 CPU.  Heathkit might have faked it.  I'm not likely to be doing any DMA
 with either of these boards, but it is a mystery.
-<p>
+</p>
 <hr>
-<a name="retroschematics"></a>
-<h4>Schematics for the additional circuits in the retrochallenge</h4>
+<h4 id="retroschematics">Schematics for the additional circuits in the retrochallenge</h4>
+<p>
 <i>2011-02-06</i>
+</p>
 <p>
 I wired up quite a bit of stuff to the ET-3400A during the retrochallenge,
 and I only have vague sketchings of the schematics I used.  I should get
 these posted before they leave my head or I have to tear the circuits apart.
+</p>
 <p>
 I'll be looking for a suitable schematic capture tool, or maybe just a simple
 drawing tool.
+</p>
 <hr>
+<p>
 <em>Gilbert Coville</em>
+</p>
 </body>
 </html>

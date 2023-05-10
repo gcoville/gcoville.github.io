@@ -1,14 +1,18 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>
 gcoville's Retrochallenge 2012 Winter Warmup page
 </title>
 </head>
 <body>
-<h1> gcoville's Retrochallenge 2012 Winter Warmup project</h1>
+<h1>gcoville's Retrochallenge 2012 Winter Warmup project</h1>
 <h2>Description:</h2>
+<p>
 This page describes my <i>continuing</i> efforts to restore a KIM-1 single
 board computer and play with it some.
+</p>
 <p>
 This is part of the 
 <a href="https://web.archive.org/web/20120206025358/http://www.wickensonline.co.uk/retrochallenge-website/tiki-index.php">
@@ -16,53 +20,73 @@ Retrochallenge 2012 Winter Warmup</a>
 which occurs from January 1, 2012 to January 31, 2012.  Retrochallenge is
 &quot;a loosely disorganised gathering of RetroComputing enthusiasts who
 collectively do stuff with old computers for a month.&quot;
+</p>
 <p>
 You can read about my earlier efforts in restoring this KIM-1 on my
 <a href="/rc2011sc/">RC2011 Summer Challenge project</a>
 page.
+</p>
 <hr>
 <h2>Status:</h2>
+<p>
 <em>While the challenge was occurring, status updates were in reverse order
 with newer entries at the top.  However, now that the challenge is over, I
 have put them in chronological order so you can read from start to finish.</em>
+</p>
 <p>
 <em>Click on any picture to see a higher-resolution version.</em>
+</p>
 <hr>
 <h3>2011-12-30</h3>
 <p>
 I've submitted my entry in the retrochallenge.net &quot;entrants&quot; forum.  My post says:
-<p>
+</p>
 <blockquote>
+<p>
 gcoville
 <br>
 &nbsp;&nbsp;more KIM-1 noodling
+</p>
 <p>
 In the RC2011 Summer Challenge, I had great visions of fixing a KIM-1 and then playing around on it. Well, the beast was in pretty bad shape and I only barely got it functioning at the 11th hour.
+</p>
 <p>
 I did more repairs on it during the off-season, so that needs to be documented.
+</p>
 <p>
 There are still more repairs I could do, but I could just blow those off and head straight for play time.
+</p>
 <p>
 I'm thinking I'm going to be less focused during this challenge than in the past. Look out for some sidetracks.
+</p>
 </blockquote>
+<p>
 Yay
+</p>
 <hr>
 <h3>2012-01-02</h3>
+<p>
 And we're off!  Yesterday I spent just a little bit of time getting my KIM-1
 ready for the Retrochallenge.  Here's what it looks like:
+</p>
 <p>
-<a href="kim-1_with_daughterboard.jpg"><img src="kim-1_with_daughterboard_sm.jpg"></a>
+<a href="kim-1_with_daughterboard.jpg"><img src="kim-1_with_daughterboard_sm.jpg" alt=""></a>
+</p>
 <p>
 The upper connector with all the wires is the Expansion Connector.  My KIM-1
 used to be dependent on external circuitry, but now it can operate standalone.
 However, I do have some extra stuff hooked up at the moment, so the picture
 shows it connected.
+</p>
 <p>
 I made a video showing what my KIM-1 is like now:
+</p>
 <p>
-<iframe width="420" height="315" src="https://www.youtube.com/embed/I2je4k6Cxqg" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/I2je4k6Cxqg" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 <p>
 I still need to figure out what to do with it.  I've got a few ideas.
+</p>
 <ul>
 <li>Make a nicer 6530 replacement board
 <ul>
@@ -85,16 +109,24 @@ being replaced.</li>
 <li>This is practically done already.  The RAM on the breadboard is 32k.  I just need to adjust the addressing logic.</li>
 </ul>
 </li>
-<li>Write some 6502 code, or steal and adapt something already written.</li>
-<ul><li>I think it would be cool to get a BASIC going on there</li></ul>
+<li>Write some 6502 code, or steal and adapt something already written.
+<ul>
+<li>I think it would be cool to get a BASIC going on there</li>
 </ul>
+</li>
+</ul>
+<p>
 I don't intend to accomplish everything on the above list.  It's just a list
 of things I'm thinking about.
+</p>
 <hr>
 <h3>2012-01-03</h3>
+<p>
 Today I cleaned up the breadboard a bit and added 32k of RAM.
+</p>
 <p>
 The KIM-1 has a memory map that looks like this:
+</p>
 <pre>
 0000-0400	1k onboard static RAM
 1700-173F	I/O + Timer from RRIOT U3
@@ -104,11 +136,13 @@ The KIM-1 has a memory map that looks like this:
 1800-1BFF	1k ROM in RRIOT U3
 1C00-1FFF	1k ROM in RRIOT U2
 </pre>
+<p>
 However, the 6502 CPU is looking for three 2-byte vectors at FFFA, including
 the Reset vector.  It turns out that the upper three address lines, A13-A15,
 are not used at all on the board, so the above map is duplicated 8 times at 0,
 2000, 4000, ... , E000.  The ROM at 1800-1FFF also appears at F800-FFFF.
 That's how the CPU resets and interrupts properly.
+</p>
 <p>
 The main address decoding in the KIM-1 can be enabled or disabled by external
 circuitry.  That signal is called DECEN and is the third wire that I'm using on
@@ -121,12 +155,14 @@ upper 3 address lines are either 000 or 111.  The KIM-1's onboard peripherals
 then occupy 0-1FFF and E000-FFFF.  This way you can have your RAM at 0 to cover
 pages 0-1 (and 2-3), and also have your ROM at FFFF for the vectors.
 This scheme leaves 2000-DFFF available to for other uses.
+</p>
 <p>
 I've got a 32k static RAM part on my breadboard.  Up until now, I've limited it
 to only 1k by grounding its 5 high order address lines.  I'd now like to make
 the full 32k available for programs.  Since it's RAM, I'd like it to be at the
 bottom half of the 64k address space.  That's going to collide with the 0-1FFF
 location of the KIM-1's peripherals.
+</p>
 <p>
 To get around this, I made it so the the DECEN line is only enabled for the
 E000-FFFF case.  The RAM on the breadboard is located at 0-7FFF.  The
@@ -135,13 +171,16 @@ expects to see its I/O at 1740.  Therefore, I modified the KIM-1's monitor to
 use the I/O at F740 and run in the F800-FFFF range instead.  Being able to make
 these sorts of firmware changes is a nice benefit of having the KIM-1's monitor
 in EPROM instead of mask-programmed in the RRIOTs.
+</p>
 <p>
 This is working just fine.  One thing I'll have to be careful about is using
 example KIM-1 programs from "The First Book of KIM" (or elsewhere).  Those
 programs make calls to subroutines in the KIM-1 monitor.  I'll need to adjust
 those subroutine calls for my relocated ROM location.
+</p>
 <p>
 Here's my current memory map:
+</p>
 <pre>
 0000-7FFF	32k static RAM on breadboard
 8000-9FFF	(empty)
@@ -155,13 +194,17 @@ F7C0-F7FF	64 bytes RAM in RRIOT U2
 F800-FBFF*	1k ROM in RRIOT U3
 FC00-FFFF	1k ROM in RRIOT U2	- 1/2 the 2716 on the daughterboard
 </pre>
+<p>
 I've put "*" by some of the addresses because my board doesn't actually have
 a U3 RRIOT (or replacement board) installed.  Yet.
+</p>
 <hr>
 <h3>2012-01-23</h3>
+<p>
 Well, I finally got some time to work on my project.  I have decided to get Lee
 Davison's <a href="https://web.archive.org/web/20130308145900/http://mycorner.no-ip.org/6502/ehbasic/index.html">Enhanced 6502 BASIC
 (EhBASIC)</a> going on the KIM-1.
+</p>
 <p>
 The requirements of EhBASIC are relatively simple.  The documentation states
 that it requires 10k for the interpreter and anywhere from 1k to 48k RAM to
@@ -169,6 +212,7 @@ hold BASIC programs.  EhBASIC communicates to the world entirely through six
 system routines: Input, Output, Load, Save, Irq, Nmi.  Irq and Nmi are optional,
 and I can stub out Load and Save to being with.  For Input and Output, I'll
 be using a serial port.
+</p>
 <p>
 Up until now, I'd been connecting 2716 EPROMs to the KIM-1.  They hold 2k bytes.
 In order to be able to hold 10k, I'd need to bump up to 16k.  A 27128 holds 16k,
@@ -179,6 +223,7 @@ Motorola 6850 ACIA.  (The circuit is quite similar to my ACIA circuit from
 and dividing by 16 externally using a 74193 counter and another 16 inside the
 6850.  10Mhz / 256 = 39062.25 bits/sec, which is close enough to 38400 baud
 to work.)
+</p>
 <p>
 First sidetrack: My workspace had become quite a mess while I was developing
 the 6530 replacement board and I couldn't find my 6850 parts.  I had purchased
@@ -186,8 +231,10 @@ a couple pieces about a year ago and I knew they were on the desk somewhere.
 I had dozens of little tubes and anti-static foam pieces holding a variety of
 chips.  The anti-static foam deteriorates after about 20 years, so I finally
 coalesced much of the collection to one larger anti-static pad:
+</p>
 <p>
-<a href="chips.jpg"><img src="chips_sm.jpg"></a>
+<a href="chips.jpg"><img src="chips_sm.jpg" alt=""></a>
+</p>
 <p>
 For the big chips, you can see several 8048 series parts, a z80a, four 6530
 RRIOTs, three 6840 timer parts, some 6820/6821s PIA parts, an AY-5-1013A UART,
@@ -195,19 +242,26 @@ an 1802 cpu, an 8031 cpu, a 6532 RIOT, a 8073 SC/MP w/ BASIC, a 6502, a
 6801 cpu, a Signetics 2650 CPU, four 8086 cpus, and a 8060D SC/MP cpu.  I've
 also got quite a few EPROMs to play with, most of them are 2716 parts, but
 there are a few others, including the 27256s I'll be using to put EhBASIC into.
+</p>
 <p>
 And here's a picture of the external circuit now:
+</p>
 <p>
-<a href="serial_port_and_eprom.jpg"><img src="serial_port_and_eprom_sm.jpg"></a>
+<a href="serial_port_and_eprom.jpg"><img src="serial_port_and_eprom_sm.jpg" alt=""></a>
+</p>
 <p>
 To the left is the serial port.  The EPROM there is a 27256 with half disabled.
+</p>
 <p>
 Next step is to start working with the EhBASIC source code, get it to build
 w/ my assembler, and write up the minimal routines to make it go.
+</p>
 <hr>
 <h3>2012-01-29</h3>
+<p>
 Today I got <a href="https://web.archive.org/web/20130308145900/http://mycorner.no-ip.org/6502/ehbasic/index.html">EhBASIC v2.22</a>
 running on my KIM-1!
+</p>
 <p>
 EhBASIC v2.22 source comes as a zip file containing <b>readme.txt</b>,
 <b>basic.asm</b>, and <b>min_mon.asm</b>.  The <b>readme.txt</b> doesn't have
@@ -216,6 +270,7 @@ anything useful in it.
 It handles the reset/irq/nmi vectors, simulated
 serial IO, and invoking the BASIC cold-start or warm-start entry points.
 <b>min_mon.asm</b> includes <b>basic.asm</b> which contains the bulk of EhBASIC.
+</p>
 <p>
 The code is written for the TASM assembler.  My preferred assembler is
 <a href="http://john.ccac.rwth-aachen.de:8000/as/">asl</a>.  There are some
@@ -223,6 +278,7 @@ syntax difference between the two assemblers.  The first step was to convert
 the source files from TASM to asl syntax.  Some pseudo-ops are different.
 The way to specify the high or low 8 bits of a 16-bit constant and
 the ability to use square brackets in arithmetic are also different.
+</p>
 <pre>
 TASM		asl (in 6502 mode)
 ----------------------------------
@@ -234,26 +290,32 @@ TASM		asl (in 6502 mode)
 #&gt;value		#hi(value)
 []		()
 </pre>
+<p>
 Since there were about 800 places to edit for these changes, I made a little
 <a href="convert.sed">sed script</a> to do the conversion.  The sed script
 isn't robust enough to fix every possible situation of the above syntax
 differences, but it does cover all the ones present in EhBASIC's asm files.
+</p>
 <p>
 After that, the <a href="diff-basic.asm-1.txt">changes to <b>basic.asm</b></a>
 were minor.  Just two places reflecting the different memory map of my
 environment.
+</p>
 <p>
 The <a href="diff-min_mon.asm-1.txt">changes to <b>min_mon.asm</b></a> were
 not too bad.  This is where I put the interface to my serial port.  I also
 removed min_mon's owning of the 6502 reset/irq/nmi vectors.  I'll be
 keeping the KIM-1 firmware in place and simply invoking this min_mon by hand.
+</p>
 <p>
 I assembled it, burned it to a 27256 EPROM, and put it into the circuit.  I
 then instructed the KIM-1 to execute at B000, and it worked first time!
+</p>
 <p>
 Here's a screenshot of my zterm window:
+</p>
 <p>
-<img src="ehbasic-1to10.png">
+<img src="ehbasic-1to10.png" alt="">
 <br>
 EhBASIC has the ability to do a warm start and retain the program and data from
 the previous run.  If you're running in BASIC the whole time, control-c will
@@ -265,25 +327,32 @@ scribbled on.  Right now, I think the KIM-1's ROM monitor may be conflicting
 with EhBASIC, so I'm reluctant to rely on the warm-start.  If this is the
 case, it's a fairly straight-forward process to move the EhBASIC variables
 to new places to not conflict with the KIM-1's page 0 usage.
+</p>
 <hr>
 <h3>2012-01-31</h3>
+<p>
 I've had a chance to play with EhBASIC a bit.  It's really quite a robust
 BASIC environment.  It's well suited for dedicated 6502-based embedded
 systems.  There are plenty of ways to deploy and invoke 6502 machine code,
 directly access memory and I/O devices, and handle IRQ and NMI interrupts in
 BASIC itself.
-<p>
+</p>
 <p>
 And so here we are again, at the end of another retrochallenge.  I got a nifty
 computing environment set up, but didn't have much time to play with it.  I
 expect I'll be messing around with it all for several more months.  There's
 lots of fun ahead making BASIC routines to interface with the various bits of
 KIM-1 I/O, ie. the keypad and LED displays.  That should keep me busy.
+</p>
 <p>
 Until next time!
+</p>
 <p>
 Gilbert
+</p>
 <hr>
+<p>
 <em>Gilbert Coville</em>
+</p>
 </body>
 </html>
